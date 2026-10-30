@@ -1,0 +1,1434 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="《屋顶九十秒》比赛版玩法模拟：手机或电脑上直接玩两天流程。仅为玩法模拟，并非游戏实机演示。">
+<meta name="theme-color" content="#0a0b09">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>屋顶九十秒</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script>
+// Fonts load without blocking the first paint: where Google Fonts is unreachable the page still renders at once with the fallback faces.
+(function(){ var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;500;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Share+Tech+Mono&display=swap'; document.head.appendChild(l); })();
+</script>
+</head>
+<body>
+<style>
+/* Layout: one 16:9 helmet view (the game's only screen) with the command overlay layered on top, then the competition design document */
+:root{
+  --ink:#0a0b09;
+  --panel:#141512;
+  --line:#2e302a;
+  --paper:#e7e0c9;
+  --paper-dim:#a39c86;
+  --amber:#e2b03a;
+  --stamp:#c9452f;
+  --hud:#dfe2d4;
+  --hud-dim:#9aa08e;
+  --f-serif:"Noto Serif SC","SimSun",serif;
+  --f-sans:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;
+  --f-type:"Courier Prime","Courier New",monospace;
+  --f-mono:"Share Tech Mono",Consolas,monospace;
+  color-scheme:dark;
+}
+html,body{background:var(--ink);color:var(--paper)}
+body{margin:0;font-family:var(--f-sans);font-size:15px;line-height:1.75}
+[hidden]{display:none!important}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+button{font-family:inherit}
+
+.top{border-bottom:1px solid var(--line)}
+.top-in{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;padding-block:16px}
+.top h1{margin:0;font-family:var(--f-type);font-weight:700;font-size:24px;letter-spacing:.02em}
+.top h1 span{color:var(--amber)}
+.top .cn{font-family:var(--f-serif);font-weight:900;font-size:18px;letter-spacing:.14em;color:var(--paper-dim)}
+.top .meta{font-family:var(--f-mono);font-size:13px;color:var(--paper-dim);letter-spacing:.08em}
+
+/* ---------- stage: everything inside is sized in 1920x1080 reference pixels via --u ---------- */
+.stage-wrap{background:#000;border-bottom:1px solid var(--line)}
+.stage{position:relative;width:100%;max-width:calc(86vh * 16 / 9);margin:0 auto;aspect-ratio:16/9;min-height:420px;max-height:calc(100vh - 40px);overflow:hidden;background:#000;container-type:size;user-select:none;-webkit-user-select:none;touch-action:pan-y;outline:none}
+.stage.onshift{touch-action:none}
+.stage{--u:min(100cqw / 1920, 100cqh / 1080)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#gl{filter:sepia(.32) saturate(.72) contrast(1.08) brightness(.9)}
+#speck{pointer-events:none;mix-blend-mode:screen;image-rendering:pixelated}
+.scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(233,226,203,.03) 0 1px,transparent 1px 3px)}
+.tint{position:absolute;inset:0;pointer-events:none;background:#0b0d09;opacity:0;transition:opacity .4s}
+.stage.lead .tint{opacity:.35}
+.fog{position:absolute;left:0;right:0;bottom:0;height:46%;pointer-events:none;background:linear-gradient(to top,rgba(214,218,206,.26),rgba(214,218,206,0));-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);-webkit-mask-image:linear-gradient(to top,#000 25%,transparent);mask-image:linear-gradient(to top,#000 25%,transparent);opacity:0}
+.visor{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.visor .v-lead{display:none}
+.stage.lead .visor .v-plain{display:none}
+.stage.lead .visor .v-lead{display:inline}
+
+.cross{position:absolute;left:50%;top:50%;width:calc(14 * var(--u));height:calc(14 * var(--u));min-width:9px;min-height:9px;transform:translate(-50%,-50%);pointer-events:none;opacity:0}
+.cross::before,.cross::after{content:"";position:absolute;background:rgba(233,226,203,.8)}
+.cross::before{left:50%;top:0;bottom:0;width:1px}
+.cross::after{top:50%;left:0;right:0;height:1px}
+.stage.onshift .cross{opacity:1}
+.hint{position:absolute;left:50%;top:70%;transform:translateX(-50%);font-family:var(--f-mono);font-size:max(11px,calc(18 * var(--u)));letter-spacing:.12em;color:rgba(233,226,203,.65);white-space:nowrap;pointer-events:none;text-shadow:0 1px 2px #000}
+
+.hud{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s;font-family:var(--f-mono);color:var(--hud);text-shadow:0 1px 2px rgba(0,0,0,.85);letter-spacing:.06em}
+.stage.onshift .hud{opacity:1}
+.stage.onshift.ovl-open .hud{opacity:.3}
+.hud .c{position:absolute;font-size:max(10px,calc(22 * var(--u)));line-height:1.45}
+.hud .dim{color:var(--hud-dim)}
+.hud .tl{left:11.5%;top:19%}
+.hud .tr{right:10%;top:18.5%;text-align:right}
+.hud .bl{left:11.5%;bottom:23.6%}
+.hud .br{right:10%;bottom:20.5%;text-align:right}
+.hud .clock{font-size:max(22px,calc(64 * var(--u)));line-height:1}
+.hud .clock.warn{color:var(--stamp)}
+.hud .rate{font-size:max(12px,calc(26 * var(--u)))}
+.hud .rate.hot{color:var(--stamp)}
+.gauge{display:block;margin-left:auto;width:max(80px,calc(190 * var(--u)))}
+.stage.withheld .hud .meter-on{display:none}
+.hud .meter-off{display:none;color:var(--hud-dim)}
+.stage.withheld .hud .meter-off{display:block}
+
+.self{position:absolute;left:20%;right:20%;top:58%;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s}
+.self.on{opacity:1}
+.stage.ovl-open .self{opacity:0}
+.self .en{font-family:var(--f-type);font-style:italic;font-size:max(13px,calc(31 * var(--u)));color:#f1f1ea;text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.8);line-height:1.35}
+.self .zh{font-family:var(--f-sans);font-size:max(11px,calc(22 * var(--u)));color:#c9ccbf;text-shadow:0 1px 3px #000;margin-top:2px}
+
+.sub{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);width:max-content;max-width:78%;background:rgba(0,0,0,.5);padding:calc(10 * var(--u)) calc(22 * var(--u));text-align:center;pointer-events:none;opacity:0;transition:opacity .2s}
+.sub.on{opacity:1}
+.sub .sp{font-family:var(--f-type);font-weight:700;font-size:max(10px,calc(16 * var(--u)));letter-spacing:.2em;color:var(--amber)}
+.sub .en{font-family:var(--f-type);font-size:max(13px,calc(26 * var(--u)));color:var(--paper);line-height:1.35}
+.sub .zh{font-family:var(--f-sans);font-size:max(11px,calc(20 * var(--u)));color:var(--paper-dim)}
+
+.connect{position:absolute;left:50%;bottom:17%;transform:translateX(-50%);z-index:4;display:grid;justify-items:center;gap:calc(8 * var(--u))}
+.connect button{font-family:var(--f-type);font-weight:700;font-size:max(13px,calc(24 * var(--u)));letter-spacing:.08em;color:var(--paper);background:rgba(255,255,255,.06);border:1px solid rgba(233,226,203,.35);padding:calc(14 * var(--u)) calc(30 * var(--u));cursor:pointer;white-space:nowrap}
+.connect button:hover{background:var(--amber);color:#15140e;border-color:var(--amber)}
+.connect .bar{width:100%;height:3px;background:rgba(233,226,203,.2)}
+.connect .bar i{display:block;height:100%;width:100%;background:var(--amber)}
+
+/* command overlay, after the key art */
+.ovl{position:absolute;inset:0;z-index:5;opacity:0;pointer-events:none;transition:opacity .35s;cursor:default}
+.stage.ovl-open .ovl{opacity:1;pointer-events:auto}
+.veil{position:absolute;inset:0;background:linear-gradient(90deg,rgba(9,10,8,.72) 0%,rgba(9,10,8,.52) 55%,rgba(9,10,8,.4) 100%);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.veil::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(233,226,203,.025) 0 1px,transparent 1px 4px)}
+.o-top{position:absolute;left:7.8%;right:7.8%;top:8.9%;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:calc(22 * var(--u));border-bottom:1px solid rgba(233,226,203,.18)}
+.ph{font-family:var(--f-mono);font-size:max(10px,calc(20 * var(--u)));letter-spacing:.2em;color:var(--amber);display:flex;flex-wrap:wrap;align-items:center;gap:calc(14 * var(--u))}
+.ph .live{width:max(7px,calc(11 * var(--u)));height:max(7px,calc(11 * var(--u)));border-radius:50%;background:var(--stamp);box-shadow:0 0 12px var(--stamp)}
+.ph small{font-size:max(9px,calc(17 * var(--u)));letter-spacing:.16em;color:var(--paper-dim)}
+.o-timer{text-align:right;font-family:var(--f-mono);white-space:nowrap}
+.o-timer .t{font-size:max(18px,calc(52 * var(--u)));line-height:1;color:rgba(223,226,212,.6)}
+.o-timer .t small{font-size:max(10px,calc(22 * var(--u)))}
+.o-timer .p{margin-top:calc(8 * var(--u));font-size:max(9px,calc(18 * var(--u)));letter-spacing:.24em;color:var(--amber)}
+.o-body{position:absolute;left:7.8%;width:70%;top:24%;bottom:12%;overflow-y:auto;scrollbar-width:none}
+.o-body::-webkit-scrollbar{display:none}
+.stats{font-family:var(--f-mono);font-size:max(11px,calc(22 * var(--u)));letter-spacing:.08em;color:var(--paper);white-space:pre-line;margin-bottom:calc(26 * var(--u));border-left:2px solid var(--amber);padding-left:calc(16 * var(--u))}
+.spk{font-family:var(--f-type);font-weight:700;font-size:max(10px,calc(20 * var(--u)));letter-spacing:.22em;color:var(--amber)}
+.ln{font-family:var(--f-type);font-size:max(14px,calc(34 * var(--u)));line-height:1.4;margin:calc(14 * var(--u)) 0 0;text-shadow:0 2px 10px rgba(0,0,0,.8);min-height:1.4em}
+.lz{font-family:var(--f-sans);font-size:max(11px,calc(24 * var(--u)));color:var(--paper-dim);margin-top:calc(8 * var(--u))}
+.ch{display:grid;gap:calc(16 * var(--u));margin-top:calc(36 * var(--u))}
+.ch.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ch button{display:flex;gap:calc(18 * var(--u));align-items:baseline;text-align:left;font-family:var(--f-type);font-size:max(12px,calc(26 * var(--u)));line-height:1.35;color:var(--paper);padding:calc(16 * var(--u)) calc(22 * var(--u));border:1px solid rgba(233,226,203,.3);background:rgba(9,10,8,.35);cursor:pointer}
+.ch button b{font-family:var(--f-mono);font-weight:400;color:var(--amber)}
+.ch button:hover,.ch button:focus-visible{border-color:var(--amber);background:rgba(226,176,58,.14)}
+.so{margin-top:calc(22 * var(--u));font-family:var(--f-mono);font-size:max(9px,calc(18 * var(--u)));letter-spacing:.16em;color:var(--paper-dim)}
+.so b{font-weight:400;color:var(--paper)}
+.o-hint{position:absolute;left:7.8%;bottom:6%;font-family:var(--f-type);font-size:max(9px,calc(16 * var(--u)));letter-spacing:.14em;color:var(--paper-dim)}
+
+.card{position:absolute;inset:0;z-index:6;display:grid;place-items:center;background:rgba(5,6,5,.9);text-align:center;padding:24px}
+.card h2{margin:0;font-family:var(--f-type);font-weight:700;font-size:max(20px,calc(56 * var(--u)));line-height:1.05}
+.card h2 span{color:var(--amber)}
+.card .cn{font-family:var(--f-serif);font-weight:900;font-size:max(14px,calc(28 * var(--u)));letter-spacing:.14em;color:var(--paper-dim);margin-top:8px}
+.card p{font-size:max(12px,calc(20 * var(--u)));color:var(--paper-dim);max-width:640px;margin:14px auto 18px}
+.card .keys{font-family:var(--f-mono);font-size:max(11px,calc(17 * var(--u)));letter-spacing:.08em;color:var(--paper-dim);margin-bottom:18px}
+.card-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:24px calc(64 * var(--u))}
+.card-row>div{flex:0 1 520px;min-width:0}
+.scan-qr{display:grid;justify-items:center;gap:4px;padding-left:calc(64 * var(--u));border-left:1px solid var(--line);color:var(--paper);text-decoration:none}
+.scan-qr svg{display:block;width:max(104px,calc(200 * var(--u)));height:auto;margin-bottom:8px}
+.scan-qr b{font-family:var(--f-serif);font-weight:900;font-size:max(13px,calc(22 * var(--u)));letter-spacing:.16em}
+.scan-qr small{font-family:var(--f-mono);font-size:max(10px,calc(14 * var(--u)));letter-spacing:.24em;color:var(--paper-dim)}
+.stage.touch .scan-qr{display:none}
+.btn{font-family:var(--f-type);font-weight:700;font-size:15px;letter-spacing:.08em;background:var(--amber);color:#15140e;border:0;padding:10px 20px;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--paper);border:1px solid var(--line);font-weight:400}
+.blink{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .4s;z-index:4}
+.blink.on{opacity:1}
+
+/* ---------- touch: WASD pad bottom-left, shovel button bottom-right, both only during the shift ---------- */
+.stage{--key:clamp(44px,12.5cqmin,58px);--kgap:6px;--edge:14px}
+.stage.touch{-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;--ctl-h:calc(var(--key) * 2 + var(--kgap) + var(--edge) + env(safe-area-inset-bottom,0px));--pad-w:calc(var(--key) * 3 + var(--kgap) * 2 + var(--edge) + env(safe-area-inset-left,0px))}
+.stage.touch button{touch-action:manipulation}
+.pad,.act{display:none;position:absolute;z-index:3;touch-action:none;user-select:none;-webkit-user-select:none}
+.stage.touch.onshift .pad,.stage.touch.onshift .act{display:grid}
+.pad{left:calc(var(--edge) + env(safe-area-inset-left,0px));bottom:calc(var(--edge) + env(safe-area-inset-bottom,0px));grid-template-columns:repeat(3,var(--key));grid-template-rows:repeat(2,var(--key));gap:var(--kgap);grid-template-areas:". w ." "a s d"}
+.pad button{display:grid;place-items:center;padding:0;border:1px solid rgba(233,226,203,.42);border-radius:6px;background:rgba(10,11,9,.42);color:var(--paper);font-family:var(--f-mono);font-size:calc(var(--key) * .38);line-height:1;box-shadow:inset 0 -3px 0 rgba(0,0,0,.35);pointer-events:auto}
+.pad button.on{background:var(--amber);border-color:var(--amber);color:#15140e;box-shadow:none;transform:translateY(2px)}
+.pad [data-k="w"]{grid-area:w}
+.pad [data-k="a"]{grid-area:a}
+.pad [data-k="s"]{grid-area:s}
+.pad [data-k="d"]{grid-area:d}
+.act{right:calc(var(--edge) + env(safe-area-inset-right,0px));bottom:calc(var(--edge) + env(safe-area-inset-bottom,0px) + var(--key) * .2);width:calc(var(--key) * 1.75);height:calc(var(--key) * 1.75);border-radius:50%;place-content:center;justify-items:center;gap:2px;padding:0;border:1.5px solid rgba(233,226,203,.42);background:rgba(10,11,9,.42);color:var(--paper-dim);transition:background .15s,border-color .15s,color .15s}
+.act b{font-family:var(--f-serif);font-weight:900;font-size:calc(var(--key) * .5);line-height:1}
+.act small{font-family:var(--f-mono);font-size:10px;letter-spacing:.16em}
+.act.ready{border-color:var(--amber);color:var(--amber);background:rgba(226,176,58,.16)}
+.act.down{background:var(--amber);color:#15140e}
+.exit{display:none;position:absolute;z-index:7;top:calc(10px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px));width:40px;height:40px;padding:0;border:1px solid rgba(233,226,203,.3);border-radius:50%;background:rgba(10,11,9,.55);color:var(--paper);font-size:18px;line-height:1;cursor:pointer}
+.stage.play .exit{display:block}
+
+/* phone play mode: the stage takes the whole screen (real fullscreen where the browser allows it) */
+.stage.play{position:fixed;inset:0;z-index:50;width:auto;height:auto;max-width:none;max-height:none;min-height:0;aspect-ratio:auto;margin:0;touch-action:none}
+html.playing,html.playing body,html.intro-on,html.intro-on body{overflow:hidden;overscroll-behavior:none}
+.stage.touch .ch button{font-size:15px;min-height:46px;padding:10px 14px;align-items:center}
+.stage.touch .connect button{font-size:15px;padding:12px 22px}
+.stage.touch.onshift .hud .bl{bottom:max(23.6%,calc(var(--ctl-h) + 14px))}
+.stage.touch.onshift .hud .br{bottom:max(20.5%,calc(var(--ctl-h) + 14px))}
+@container (orientation: landscape){
+  .stage.touch.onshift .sub{max-width:calc(100% - var(--pad-w) * 2 - 24px)}
+  .stage.touch.onshift .hint{top:64%}
+}
+@container (orientation: portrait){
+  .stage.touch .hud .tl,.stage.touch .hud .tr{top:11%;max-width:44%}
+  .stage.touch .hud .tl,.stage.touch .hud .bl{left:7%}
+  .stage.touch .hud .tr,.stage.touch .hud .br{right:7%}
+  .stage.touch.onshift .hud .bl,.stage.touch.onshift .hud .br{bottom:calc(var(--ctl-h) + 96px)}
+  .stage.touch .sub{bottom:calc(var(--ctl-h) + 10px);max-width:92%}
+  .stage.touch .connect{bottom:calc(var(--ctl-h) + 24px)}
+  .stage.touch .self{top:34%;left:8%;right:8%}
+  .stage.touch .hint{top:58%}
+}
+
+/* ---------- opening statement, shown over everything until dismissed ---------- */
+.intro{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--ink);cursor:pointer;transition:opacity .6s;padding:max(24px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px))}
+.intro::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(233,226,203,.03) 0 1px,transparent 1px 3px)}
+.intro.out{opacity:0;pointer-events:none}
+.intro-in{display:grid;justify-items:center;gap:22px;max-width:36em;text-align:center}
+.intro .stampbox{font-family:var(--f-serif);font-weight:900;font-size:14px;letter-spacing:.5em;padding:4px 6px 4px 14px;color:var(--stamp);border:2px solid var(--stamp);transform:rotate(-2deg)}
+.intro h2{margin:0;font-family:var(--f-serif);font-weight:900;font-size:clamp(24px,6vw,44px);line-height:1.5;letter-spacing:.08em;color:var(--paper);text-wrap:balance}
+.intro h2 span{display:inline-block}
+.intro .en{font-family:var(--f-type);font-size:clamp(12px,2.8vw,16px);letter-spacing:.14em;color:var(--paper-dim)}
+.intro .rule{width:48px;height:2px;background:var(--amber)}
+.intro .go{font-family:var(--f-mono);font-size:13px;letter-spacing:.24em;color:var(--amber);opacity:0;transition:opacity .5s}
+.intro.ready .go{opacity:1;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+
+.bar-ctl{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding-block:12px;border-bottom:1px solid var(--line);font-size:13px;color:var(--paper-dim)}
+.bar-ctl .sp{flex:1;min-width:200px}
+.bar-ctl button{font-size:13px;padding:6px 12px}
+.bar-ctl label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+
+/* ---------- document ---------- */
+.doc section{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px 40px;padding-block:38px;border-bottom:1px solid var(--line)}
+.doc section>header h2{font-family:var(--f-serif);font-weight:700;font-size:21px;margin:0;line-height:1.4;text-wrap:balance}
+.doc section>header p{margin:6px 0 0;font-size:13px;color:var(--paper-dim)}
+.doc .body{min-width:0;max-width:70ch}
+.doc .body.wide{max-width:none}
+.doc p{margin:0 0 14px}
+.doc h3{font-size:15px;margin:22px 0 8px}
+.lead{font-size:17px;line-height:1.85}
+.en-q{font-family:var(--f-type);color:var(--paper)}
+ul.plain{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+ul.plain li{padding-left:18px;position:relative}
+ul.plain li::before{content:"";position:absolute;left:0;top:.72em;width:7px;height:7px;background:var(--amber)}
+.note{font-size:13px;color:var(--paper-dim);border-left:2px solid var(--line);padding-left:12px;margin-top:18px}
+ol.loop{list-style:none;counter-reset:s;padding:0;margin:0;display:grid}
+ol.loop li{counter-increment:s;display:grid;grid-template-columns:44px minmax(0,1fr);gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
+ol.loop li::before{content:counter(s);font-family:var(--f-mono);font-size:26px;line-height:1.1;color:var(--amber)}
+ol.loop b{display:block}
+ol.loop span{color:var(--paper-dim);font-size:14px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px 10px 0;border-top:1px solid var(--line)}
+thead th{font-weight:500;color:var(--paper-dim);font-size:12px;letter-spacing:.08em;border-top:0}
+td.k{white-space:nowrap;font-weight:500}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.chip{display:inline-block;font-size:12px;line-height:1.5;padding:0 7px;border:1px solid var(--line);color:var(--paper-dim);margin-right:6px;white-space:nowrap}
+.chip.on{border-color:var(--amber);color:var(--amber)}
+.chip.red{border-color:var(--stamp);color:var(--stamp)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 32px}
+.grid2 h3{font-size:15px;margin:0 0 4px}
+.grid2 p{margin:0;color:var(--paper-dim);font-size:14px}
+code{font-family:var(--f-mono);font-size:.92em;background:var(--panel);padding:1px 5px}
+pre{background:var(--panel);border:1px solid var(--line);padding:12px 14px;overflow-x:auto;font-family:var(--f-mono);font-size:13px;margin:0 0 14px}
+pre code{background:none;padding:0}
+footer{color:var(--paper-dim);font-size:13px;padding-block:26px 48px}
+@media (max-width:760px){
+  .doc section{grid-template-columns:minmax(0,1fr);padding-block:28px}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  .stage{aspect-ratio:auto;height:min(78vh,560px)}
+  .o-body{width:84%}
+  .ch.two{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){.hud,.self,.sub,.ovl,.tint,.blink,.intro,.act{transition:none}.intro.ready .go{animation:none}}
+</style>
+
+<div class="intro" id="intro" role="dialog" aria-modal="true" aria-labelledby="introText" tabindex="-1">
+  <div class="intro-in">
+    <div class="stampbox">声明</div>
+    <h2 id="introText"><span>以下内容仅为玩法模拟，</span><span>并非游戏实机演示</span></h2>
+    <div class="rule"></div>
+    <div class="en">GAMEPLAY SIMULATION ONLY · NOT ACTUAL GAME FOOTAGE</div>
+    <div class="go" id="introGo">点击继续 · CLICK TO CONTINUE</div>
+  </div>
+</div>
+
+<header class="top">
+  <div class="wrap top-in">
+    <h1><span>90</span> SECONDS ON THE ROOF</h1>
+    <span class="cn">屋顶九十秒</span>
+    <span class="meta">比赛版 · 两天 · 可交互效果图与玩法说明 v0.4</span>
+  </div>
+</header>
+
+<div class="stage-wrap">
+  <section class="stage" id="stage" tabindex="0" aria-label="头盔视角和指挥官界面">
+    <canvas id="gl"></canvas>
+    <canvas id="speck"></canvas>
+    <div class="tint"></div>
+    <div class="fog" id="fog"></div>
+    <div class="scan"></div>
+    <svg class="visor" viewBox="0 0 1920 1080" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <radialGradient id="vg" cx="50%" cy="48%" r="62%"><stop offset="70%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".55"/></radialGradient>
+      </defs>
+      <rect width="1920" height="1080" fill="url(#vg)"/>
+      <g class="v-plain">
+        <path fill="#0a0b09" fill-opacity=".96" fill-rule="evenodd" d="M0 0H1920V1080H0Z M240 70 H1680 Q1850 70 1862 230 L1880 850 Q1880 1012 1710 1022 H210 Q40 1012 40 850 L58 230 Q70 70 240 70 Z"/>
+        <path fill="none" stroke="#3b3d35" stroke-width="6" vector-effect="non-scaling-stroke" d="M240 70 H1680 Q1850 70 1862 230 L1880 850 Q1880 1012 1710 1022 H210 Q40 1012 40 850 L58 230 Q70 70 240 70 Z"/>
+        <path fill="none" stroke="#fff" stroke-opacity=".06" stroke-width="12" vector-effect="non-scaling-stroke" d="M120 260 Q140 120 420 108"/>
+      </g>
+      <g class="v-lead">
+        <path fill="#0a0b09" fill-opacity=".97" fill-rule="evenodd" d="M0 0H1920V1080H0Z M370 146 H1550 Q1700 146 1710 286 L1726 800 Q1726 940 1580 948 H340 Q194 940 194 800 L210 286 Q220 146 370 146 Z"/>
+        <path fill="none" stroke="#4a4536" stroke-width="8" vector-effect="non-scaling-stroke" d="M370 146 H1550 Q1700 146 1710 286 L1726 800 Q1726 940 1580 948 H340 Q194 940 194 800 L210 286 Q220 146 370 146 Z"/>
+      </g>
+    </svg>
+
+    <div class="cross"></div>
+    <div class="hint" id="hint"></div>
+
+    <div class="hud" aria-hidden="true">
+      <div class="c tl"><div id="hZone">BLOCK 3 ROOF · ZONE K «KATYA»</div><div class="dim" id="hCrew">LIQUIDATOR №214 · SHIFT 1</div></div>
+      <div class="c tr"><div class="clock" id="hClock">00:00</div><div class="dim" id="hTotal">/ 01:30 · WHISTLE AT 01:20</div></div>
+      <div class="c bl"><div id="hCleared">CLEARED 0 / 6</div><div class="dim" id="hShovel">SHOVEL: EMPTY</div></div>
+      <div class="c br">
+        <svg class="gauge" id="gauge" viewBox="0 0 120 74"></svg>
+        <div class="meter-on"><div class="rate" id="hRate">500 Р/ч</div><div class="dim" id="hDose">DOSE 0.0 / 25 REM</div></div>
+        <div class="meter-off">METER WITHHELD · 剂量计已收走</div>
+      </div>
+    </div>
+
+    <div class="self" id="self"><div class="en" id="selfEn"></div><div class="zh" id="selfZh"></div></div>
+    <div class="sub" id="sub"><div class="sp" id="subSp"></div><div class="en" id="subEn"></div><div class="zh" id="subZh"></div></div>
+    <div class="connect" id="connect" hidden><button type="button" id="connectBtn"></button><div class="bar" id="connectBar" hidden><i id="connectFill"></i></div></div>
+    <div class="pad" id="pad" aria-label="按住走动">
+      <button type="button" data-k="w" aria-label="前进">W</button>
+      <button type="button" data-k="a" aria-label="左移">A</button>
+      <button type="button" data-k="s" aria-label="后退">S</button>
+      <button type="button" data-k="d" aria-label="右移">D</button>
+    </div>
+    <button class="act" id="actBtn" type="button"><b id="actK">铲</b><small id="actL">SHOVEL</small></button>
+    <div class="blink" id="blink"></div>
+
+    <div class="ovl" id="ovl" aria-live="polite">
+      <div class="veil"></div>
+      <div class="o-top">
+        <div class="ph"><span class="live"></span><span id="oLine">LINE OPEN · STAIRWELL → FIELD HQ</span><small id="oHeader"></small></div>
+        <div class="o-timer" id="oTimer" hidden><div class="t" id="oT">00:00 <small>/ 01:30</small></div><div class="p">▌▌ TIMER PAUSED</div></div>
+      </div>
+      <div class="o-body" id="oBody">
+        <div class="stats" id="oStats" hidden></div>
+        <div id="oLineBox"><div class="spk" id="oSpk"></div><p class="ln" id="oText"></p><div class="lz" id="oZh"></div></div>
+        <div class="ch" id="oChoices"></div>
+        <div class="so" id="oSo" hidden></div>
+      </div>
+      <div class="o-hint" id="oHint">CLICK OR SPACE TO CONTINUE · 点击继续</div>
+    </div>
+
+    <div class="card" id="startCard">
+      <div class="card-row">
+        <div>
+          <h2><span>90</span> SECONDS<br>ON THE ROOF</h2>
+          <div class="cn">屋顶九十秒</div>
+          <p>1986 年秋，切尔诺贝利。你同时是指挥部的上校和上屋顶的清理人员。这是比赛版的两天流程，台词直接取自游戏剧本。</p>
+          <div class="keys" id="startKeys">鼠标 转头 · WASD 走动 · 左键 铲起 / 扔下 · 空格 接通指挥部 · 1 2 3 选择</div>
+          <button class="btn" type="button" id="startBtn">开始（开启声音）</button>
+        </div>
+        <a class="scan-qr" href="https://xxxpixel-x.github.io/roof90/" target="_blank" rel="noopener" aria-label="手机扫码试玩：xxxpixel-x.github.io/roof90">
+          <svg viewBox="-3 -3 35 35" shape-rendering="crispEdges" aria-hidden="true"><rect x="-3" y="-3" width="35" height="35" fill="#e7e0c9"/><path fill="#0a0b09" d="M0 0h7v1h-7zM10 0h5v1h-5zM16 0h4v1h-4zM22 0h7v1h-7zM0 1h1v1h-1zM6 1h1v1h-1zM10 1h1v1h-1zM13 1h3v1h-3zM17 1h1v1h-1zM22 1h1v1h-1zM28 1h1v1h-1zM0 2h1v1h-1zM2 2h3v1h-3zM6 2h1v1h-1zM10 2h1v1h-1zM12 2h2v1h-2zM15 2h1v1h-1zM17 2h2v1h-2zM20 2h1v1h-1zM22 2h1v1h-1zM24 2h3v1h-3zM28 2h1v1h-1zM0 3h1v1h-1zM2 3h3v1h-3zM6 3h1v1h-1zM9 3h3v1h-3zM13 3h2v1h-2zM18 3h3v1h-3zM22 3h1v1h-1zM24 3h3v1h-3zM28 3h1v1h-1zM0 4h1v1h-1zM2 4h3v1h-3zM6 4h1v1h-1zM9 4h2v1h-2zM13 4h3v1h-3zM22 4h1v1h-1zM24 4h3v1h-3zM28 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM8 5h1v1h-1zM10 5h1v1h-1zM12 5h4v1h-4zM18 5h2v1h-2zM22 5h1v1h-1zM28 5h1v1h-1zM0 6h7v1h-7zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h7v1h-7zM9 7h2v1h-2zM12 7h1v1h-1zM14 7h5v1h-5zM0 8h1v1h-1zM3 8h1v1h-1zM5 8h2v1h-2zM8 8h3v1h-3zM12 8h1v1h-1zM19 8h1v1h-1zM21 8h1v1h-1zM23 8h1v1h-1zM0 9h2v1h-2zM4 9h1v1h-1zM7 9h3v1h-3zM11 9h1v1h-1zM14 9h1v1h-1zM17 9h1v1h-1zM20 9h3v1h-3zM25 9h1v1h-1zM28 9h1v1h-1zM2 10h2v1h-2zM6 10h1v1h-1zM11 10h2v1h-2zM16 10h4v1h-4zM22 10h1v1h-1zM24 10h4v1h-4zM0 11h1v1h-1zM2 11h1v1h-1zM8 11h2v1h-2zM14 11h2v1h-2zM26 11h2v1h-2zM1 12h6v1h-6zM8 12h2v1h-2zM11 12h1v1h-1zM15 12h1v1h-1zM17 12h2v1h-2zM20 12h4v1h-4zM25 12h1v1h-1zM27 12h2v1h-2zM0 13h1v1h-1zM7 13h2v1h-2zM11 13h1v1h-1zM16 13h1v1h-1zM19 13h2v1h-2zM1 14h3v1h-3zM5 14h3v1h-3zM10 14h3v1h-3zM16 14h1v1h-1zM23 14h6v1h-6zM0 15h1v1h-1zM5 15h1v1h-1zM8 15h3v1h-3zM13 15h2v1h-2zM16 15h2v1h-2zM20 15h2v1h-2zM23 15h3v1h-3zM27 15h1v1h-1zM0 16h4v1h-4zM5 16h6v1h-6zM13 16h2v1h-2zM17 16h1v1h-1zM20 16h2v1h-2zM23 16h1v1h-1zM27 16h1v1h-1zM2 17h1v1h-1zM4 17h1v1h-1zM7 17h1v1h-1zM9 17h2v1h-2zM12 17h1v1h-1zM16 17h2v1h-2zM20 17h4v1h-4zM25 17h1v1h-1zM28 17h1v1h-1zM0 18h1v1h-1zM3 18h1v1h-1zM6 18h1v1h-1zM8 18h1v1h-1zM12 18h2v1h-2zM18 18h1v1h-1zM20 18h3v1h-3zM24 18h1v1h-1zM27 18h2v1h-2zM2 19h3v1h-3zM9 19h1v1h-1zM12 19h2v1h-2zM17 19h2v1h-2zM22 19h3v1h-3zM27 19h2v1h-2zM0 20h1v1h-1zM4 20h1v1h-1zM6 20h3v1h-3zM10 20h2v1h-2zM14 20h3v1h-3zM19 20h6v1h-6zM26 20h1v1h-1zM8 21h1v1h-1zM10 21h4v1h-4zM16 21h1v1h-1zM20 21h1v1h-1zM24 21h1v1h-1zM26 21h3v1h-3zM0 22h7v1h-7zM10 22h1v1h-1zM13 22h2v1h-2zM16 22h2v1h-2zM20 22h1v1h-1zM22 22h1v1h-1zM24 22h1v1h-1zM27 22h1v1h-1zM0 23h1v1h-1zM6 23h1v1h-1zM8 23h2v1h-2zM13 23h1v1h-1zM16 23h1v1h-1zM18 23h1v1h-1zM20 23h1v1h-1zM24 23h4v1h-4zM0 24h1v1h-1zM2 24h3v1h-3zM6 24h1v1h-1zM10 24h2v1h-2zM14 24h5v1h-5zM20 24h5v1h-5zM27 24h2v1h-2zM0 25h1v1h-1zM2 25h3v1h-3zM6 25h1v1h-1zM8 25h1v1h-1zM10 25h2v1h-2zM14 25h1v1h-1zM19 25h1v1h-1zM22 25h1v1h-1zM24 25h4v1h-4zM0 26h1v1h-1zM2 26h3v1h-3zM6 26h1v1h-1zM9 26h3v1h-3zM14 26h1v1h-1zM16 26h1v1h-1zM19 26h2v1h-2zM24 26h3v1h-3zM28 26h1v1h-1zM0 27h1v1h-1zM6 27h1v1h-1zM9 27h1v1h-1zM11 27h1v1h-1zM14 27h1v1h-1zM17 27h4v1h-4zM22 27h2v1h-2zM27 27h1v1h-1zM0 28h7v1h-7zM8 28h1v1h-1zM10 28h2v1h-2zM14 28h1v1h-1zM16 28h2v1h-2zM19 28h2v1h-2zM27 28h1v1h-1z"/></svg>
+          <b>手机扫码试玩</b>
+          <small>SCAN TO PLAY</small>
+        </a>
+      </div>
+    </div>
+    <div class="card" id="endCard" hidden>
+      <div>
+        <h2>END OF DEMO</h2>
+        <div class="cn">演示结束</div>
+        <p id="endText">结局和史实字幕已播完。成品会在这里接鸣谢画面，然后按任意键退出。</p>
+        <button class="btn" type="button" id="againBtn">从第 1 天重新开始</button>
+      </div>
+    </div>
+    <button class="exit" id="exitBtn" type="button" aria-label="退出全屏">✕</button>
+  </section>
+</div>
+
+<div class="wrap bar-ctl">
+  <span class="sp" id="status">还没开始。</span>
+  <label><input type="checkbox" id="zhToggle" checked> 中文字幕</label>
+  <button class="btn ghost" type="button" id="playBtn" hidden>全屏游玩</button>
+  <button class="btn ghost" type="button" id="day2Btn">跳到第 2 天</button>
+  <button class="btn ghost" type="button" id="restartBtn">重新开始</button>
+</div>
+
+<main class="doc wrap">
+
+  <section>
+    <header><h2>一句话</h2><p>比赛版，2026-11-01 12:00 截止</p></header>
+    <div class="body">
+      <p class="lead">1986 年秋，切尔诺贝利。你同时扮演两个人：在指挥部下命令的上校，和带着铁锹爬上 3 号机组屋顶的清理人员。指挥官的每个决定，都会在 90 秒后落到清理人员身上，也就是落到你自己身上。</p>
+      <p class="en-q">You give the orders. You take the dose.</p>
+      <p class="note">上面的效果图是游戏的网页复刻：流程、数值、选项和台词都和游戏一致，台词是从 <code>data/dialogue/</code> 的剧本文件直接拷进来的（工作区版本，基于提交 <code id="commitId">—</code>）。屋顶用几何体搭成，没有配音，只有程序合成的环境声。</p>
+    </div>
+  </section>
+
+  <section>
+    <header><h2>角色</h2><p>全部虚构</p></header>
+    <div class="body wide">
+      <div class="tbl"><table>
+        <thead><tr><th>角色</th><th>谁来操作</th><th>出现在哪里</th><th>比赛版配音</th></tr></thead>
+        <tbody>
+          <tr><td class="k">指挥官（上校）</td><td>玩家</td><td>只有文字：叠在头盔画面上的半透明指挥官界面</td><td><span class="chip">只出文字</span></td></tr>
+          <tr><td class="k">清理人员 №214</td><td>玩家（第 1 天）</td><td>第一人称头盔视角；19 岁义务兵，紧张，会自言自语</td><td><span class="chip on">配音</span></td></tr>
+          <tr><td class="k">清理人员 №361</td><td>玩家（第 2 天）</td><td>38 岁预备役，两个孩子，冷幽默</td><td><span class="chip on">配音</span></td></tr>
+          <tr><td class="k">Sgt. Koval 小队负责人</td><td>NPC</td><td>楼梯间打电话进来；门口当面交代；屋顶上无线电喊话</td><td><span class="chip on">配音</span></td></tr>
+          <tr><td class="k">Orlova 剂量员</td><td>NPC</td><td>指挥官界面里报读数和剂量</td><td><span class="chip">只出文字</span></td></tr>
+          <tr><td class="k">Lebedev 政府委员会代表</td><td>NPC</td><td>指挥官界面里催工期</td><td><span class="chip">只出文字</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section>
+    <header><h2>一个画面，两层界面</h2><p>头盔视角是游戏唯一的画面</p></header>
+    <div class="body">
+      <p>指挥官界面不和头盔画面并排，而是一层盖满屏幕的半透明文字界面，透过它还能看到压暗的头盔画面。</p>
+      <ul class="plain">
+        <li><b>引入</b>：每次都由 Koval 的画外音开头，屏幕下方出现“接通指挥部”。在楼梯间可以点击或按空格；在屋顶上鼠标锁定用来转头，只能按空格。</li>
+        <li><b>打开期间</b>：头盔画面变暗、轻微模糊；屋顶声音压低但不停；计时和剂量暂停；转头、走动、铲石墨失效，鼠标解锁。</li>
+        <li><b>界面里</b>：角色名、打字机效果的台词和中文小字、选项（点击或按 1 / 2 / 3）。</li>
+        <li><b>关闭后</b>：界面淡出，声音恢复，鼠标重新锁定，计时继续。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <header><h2>一天的流程</h2><p>比赛版共两天</p></header>
+    <div class="body">
+      <ol class="loop">
+        <li><b>楼梯间 · 接通指挥部</b><span>头盔视角，清理人员站在通往屋顶的门口，计时还没开始。Koval 打电话进来，接通后在指挥官界面里听汇报、做决定。</span></li>
+        <li><b>门口交代</b><span>界面关闭，Koval 当面交代几句（内容随你的决定变化），然后门打开。</span></li>
+        <li><b>屋顶</b><span>WASD 走到石墨旁，左键铲起，走到北侧破口边缘扔下去。班次进行到 40% 时有一次无线电事件。</span></li>
+        <li><b>汇报</b><span>哨声后回到楼梯间。Koval 再打电话，界面里显示清除块数、剂量和停留秒数，以及按结果分支的汇报台词。</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <header><h2>两天的决策</h2><p>效果图里全部生效</p></header>
+    <div class="body wide">
+      <div class="tbl"><table>
+        <thead><tr><th>天</th><th>决策</th><th>落到屋顶上的变化</th></tr></thead>
+        <tbody>
+          <tr><td class="k">第 1 天 · 卡佳</td><td>轻铅背心 / 重铅板</td><td>重：环境剂量率 ×0.7，走路速度 ×0.67，视角晃得更厉害；门口交代和自言自语跟着变</td></tr>
+          <tr><td class="k">第 1、2 天</td><td>常备命令：1000 / 2000 Р/ч 自动撤，或不自动撤</td><td>只在无线电事件 5 秒内没接通时生效</td></tr>
+          <tr><td class="k">第 2 天 · 娜塔莎</td><td>普通面罩 / 铅玻璃面罩</td><td>铅玻璃：面罩开口缩到 86%，画面变暗，胶片白点变少</td></tr>
+          <tr><td class="k">第 2 天</td><td>派剂量员侦察 / 不侦察</td><td>侦察：屋顶上用白粉笔圈出热点，代价是定额从 10 块变成 12 块</td></tr>
+          <tr><td class="k">第 2 天</td><td>发剂量计 / 收走剂量计</td><td>收走：右下角剂量表消失，只剩盖革声；同时决定结局走“说实话”还是“隐瞒”分支</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section>
+    <header><h2>无线电事件</h2><p>时间不够时第一个砍</p></header>
+    <div class="body">
+      <p>班次进行到 40% 时，Koval 在无线电里喊读数飙升（第 1 天 1200 Р/ч，第 2 天 1600 Р/ч），屏幕下方出现“按空格接通”，计时还在走。</p>
+      <ul class="plain">
+        <li><b>5 秒内按空格</b>：打开指挥官界面，计时暂停，选 [1] 撤回来 或 [2] 继续干。</li>
+        <li><b>5 秒内没接通</b>：按常备命令执行。读数达到阈值就撤，阈值为 0 表示不撤。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <header><h2>屋顶操作与数值</h2><p>和 <code>roof/</code>、<code>player/</code> 一致</p></header>
+    <div class="body wide">
+      <div class="tbl"><table>
+        <thead><tr><th>项目</th><th>数值</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td class="k">转头 / 走动</td><td>—</td><td>鼠标锁定后转头；W A S D 走动；开班前不能动</td></tr>
+          <tr><td class="k">铲起</td><td class="num">≤ 2 m</td><td>准星对准 2 米内的石墨，提示“左键铲起”</td></tr>
+          <tr><td class="k">扔下</td><td class="num">≤ 3 m</td><td>铲着石墨，走到北侧破口边缘 3 米内，准星对着破口</td></tr>
+          <tr><td class="k">环境剂量率</td><td class="num">卡佳 500 · 娜塔莎 700</td><td>Р/ч，游戏值</td></tr>
+          <tr><td class="k">铲着石墨</td><td class="num">+900 Р/ч</td><td>剂量表进红区（≥ 1000）会触发自言自语</td></tr>
+          <tr><td class="k">走路速度</td><td class="num">3 m/s</td><td>重铅板 ×0.67，铲着石墨 ×0.85</td></tr>
+          <tr><td class="k">班次</td><td class="num">90 s</td><td>第 80 秒哨声，最后 30 秒无线电报时</td></tr>
+          <tr><td class="k">剂量上限</td><td class="num">25 rem</td><td>超出立即结束</td></tr>
+          <tr><td class="k">评价</td><td>—</td><td>超限 / 被撤回 / 清除 ≥ 75% 算好 / 其余算差，决定汇报和第 2 天开场</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section>
+    <header><h2>头盔画面</h2><p>和 <code>ui/helmet/</code> 一致</p></header>
+    <div class="body wide">
+      <div class="grid2">
+        <div><h3>四角读数</h3><p>左上区域和编号，右上计时和哨声时间，左下清除数和铁锹状态，右下 DP-5 风格对数剂量表、剂量率和累计剂量。</p></div>
+        <div><h3>面罩</h3><p>边框遮住视野四周。铅玻璃面罩开口更小、画面更暗。</p></div>
+        <div><h3>起雾</h3><p>面罩下沿随呼吸起雾，班次越往后越重。</p></div>
+        <div><h3>胶片白点</h3><p>密度跟随剂量率，来自当年影像上辐射打在胶片上的白点。</p></div>
+        <div><h3>自言自语</h3><p>斜体字幕在画面中部，无线电字幕在底部，两句之间至少隔 6 秒。</p></div>
+        <div><h3>1986 年录像感</h3><p>偏棕的低饱和调色加扫描线，和宣传图一致。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <header><h2>结局</h2><p>两件事决定</p></header>
+    <div class="body">
+      <p>期限前两天的石墨有没有都清完，以及第 2 天有没有发剂量计，组合成四个结局（清完 / 没清完 × 说实话 / 隐瞒）。结局台词后接四段史实字幕。成品会再接鸣谢画面，按任意键退出（任务 B）。</p>
+    </div>
+  </section>
+
+  <section>
+    <header><h2>配音</h2><p>IndexTTS-2.5，本地生成</p></header>
+    <div class="body">
+      <ul class="plain">
+        <li>英文配音，中文字幕始终显示。比赛版配 113 句，三个声音：Koval、№214、№361。指挥官和 №097 不配音。</li>
+        <li>自言自语每条只用第一个版本。</li>
+        <li>参考录音放 <code>audio/tts/refs/</code>，生成脚本是 <code>audio/tts/generate_voice.py</code>。</li>
+        <li>环境已经在 <code>F:\tools\index-tts</code> 装好并测过：RTX 5080 上一句 5 秒的台词约 3 秒生成完。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <header><h2>史实底子</h2><p>机制的出处</p></header>
+    <div class="body">
+      <ul class="plain">
+        <li>1986 年 4 月 26 日 4 号机组爆炸，石墨被抛到相邻的 3 号机组屋顶和通风烟囱平台上。</li>
+        <li>9 月，遥控机器人在强辐射下失灵，清理改由士兵手工完成。</li>
+        <li>屋顶分为 K「卡佳」、N「娜塔莎」、M「玛莎」三个区域，玛莎在烟囱脚下，辐射最强。比赛版只玩前两个。</li>
+        <li>每人在屋顶上的时间按秒计算，通常不到两分钟；当时清理人员的累计剂量上限是 25 rem。</li>
+      </ul>
+      <p class="note">数值都是为了节奏做的简化，不代表真实数据。</p>
+    </div>
+  </section>
+
+  <section>
+    <header><h2>效果图和游戏的差别</h2><p>如实列出</p></header>
+    <div class="body">
+      <ul class="plain">
+        <li>屋顶是几何体灰盒，不是游戏里的贴图和模型；楼梯间也简化了。</li>
+        <li>没有配音。台词按游戏的规则显示（每句 1 秒加每词 0.33 秒）。</li>
+        <li>结局后没有鸣谢画面，直接显示“演示结束”。</li>
+        <li>手机上也能玩：点“开始”后画面全屏，左下的 W A S D 键按住走动，拖动画面转头，右下圆形按钮铲起和扔下，屋顶上的无线电改成点按接通。游戏本体是 Windows 版，只用键盘和鼠标。</li>
+        <li>台词是生成页面时从工作区的剧本拷进来的，已经是缩短后的第 1 天开场。剧本再改动后，在项目根目录运行 <code>node tools/build_mockup.js</code>，再重新发布这个页面就能同步。</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>90 Seconds on the Roof · 屋顶九十秒 · 效果图与玩法说明 v0.4 · 2026 年 10 月 31 日</footer>
+</main>
+
+<script id="game-data" type="application/json">{"commit":"f45edb7","characters":[{"id":"commander","name":"Commander","voiced":true},{"id":"koval","name":"Sergeant Koval","voiced":true},{"id":"liq_214","name":"Liquidator Two-One-Four","voiced":true},{"id":"liq_361","name":"Liquidator Three-Six-One","voiced":true},{"id":"liq_097","name":"Liquidator Zero-Nine-Seven","voiced":true},{"id":"lebedev","name":"Deputy Lebedev","voiced":false},{"id":"orlova","name":"Dosimetrist Orlova","voiced":false}],"days":{"1":{"day":1,"zone":"K","liquidator":"liq_214","quota":6,"hq":[{"type":"line","id":"d1_hq_004","speaker":"koval","text":"Ninety seconds per man, Comrade Colonel. Any longer and a soldier passes the twenty-five rem limit in a single run.","zh":"每人九十秒，上校同志。再长的话，士兵跑一趟就会超过二十五雷姆的上限。","next":"d1_hq_005"},{"type":"line","id":"d1_hq_005","speaker":"koval","text":"First man up is Private Two-One-Four. Nineteen years old, conscript. Target is six graphite blocks in Zone Katya.","zh":"第一个上去的是列兵二一四。十九岁，义务兵。目标是“卡佳”区域的六块石墨。","next":"d1_hq_006"},{"type":"line","id":"d1_hq_006","speaker":"koval","text":"We cut lead sheets in the workshop. Thick aprons stop more gamma rays, but they weigh thirty kilos. A boy that size will barely move.","zh":"我们在车间裁了铅板。厚铅围裙能挡住更多伽马射线，但重达三十公斤。那么瘦小的孩子穿上几乎走不动路。","next":"d1_choice_armor"},{"type":"choice","id":"d1_choice_armor","decision":"armor","options":[{"key":"1","label":"Issue light lead vests. He needs to move fast.","line":{"id":"d1_hq_008a","speaker":"commander","text":"Put him in the light vest. Ninety seconds is nothing if he cannot lift his feet.","zh":"给他穿轻型铅背心。如果迈不开腿，九十秒根本不够用。"},"effects":{"heavy_lead":false},"next":"d1_hq_011"},{"key":"2","label":"Issue heavy lead plates. Protect his chest and spine.","line":{"id":"d1_hq_008b","speaker":"commander","text":"Strap on the heavy plates. I will not send a nineteen-year-old onto that roof bare.","zh":"绑上重型铅板。我不会让一个十九岁的孩子毫无防护地上那个屋顶。"},"effects":{"heavy_lead":true},"next":"d1_hq_011"}]},{"type":"line","id":"d1_hq_011","speaker":"koval","text":"Zone Katya reads five hundred roentgen an hour. If the meter spikes and the radio drops, when do I blow the recall whistle?","zh":"“卡佳”区域本底每小时五百伦琴。如果辐射表飙升、无线电又断了，我什么时候吹哨撤人？","next":"d1_choice_standing"},{"type":"choice","id":"d1_choice_standing","decision":"standing_order","options":[{"key":"1","label":"Recall automatically at one thousand roentgen per hour.","line":{"id":"d1_hq_013a","speaker":"commander","text":"Pull him out at one thousand roentgen per hour if the line goes dead. Do not wait for me.","zh":"如果通讯中断，每小时一千伦琴就拉他回来。不用等我命令。"},"effects":{"recall_threshold_rph":1000},"next":"d1_hq_014"},{"key":"2","label":"Recall automatically at two thousand roentgen per hour.","line":{"id":"d1_hq_013b","speaker":"commander","text":"Hold until two thousand roentgen per hour. Below that, he stays on the shovel until the timer runs out.","zh":"撑到每小时两千伦琴。低于这个数，让他一直铲到计时结束。"},"effects":{"recall_threshold_rph":2000},"next":"d1_hq_014"},{"key":"3","label":"Never recall automatically. Hold until the whistle.","line":{"id":"d1_hq_013c","speaker":"commander","text":"No automatic recall. Unless I give the word myself, he works the full ninety seconds.","zh":"不设自动撤离。除非我亲自下令，否则他必须干满九十秒。"},"effects":{"recall_threshold_rph":0},"next":"d1_hq_014"}]},{"type":"line","id":"d1_hq_014","speaker":"koval","text":"Copy that, Comrade Colonel. Two-One-Four is ready at the door. Switching to radio.","zh":"收到，上校同志。二一四已经在门口准备好了。切到无线电。","next":null}],"briefing":[{"id":"d1_brief_001","speaker":"koval","text":"Check your respirator seal, Two-One-Four. When this door opens, run straight to the yellow line in Zone Katya.","zh":"检查呼吸器密封，二一四。门一开，直接跑到“卡佳”区域的黄线处。"},{"id":"d1_brief_002a","speaker":"koval","text":"That heavy lead apron will pull your shoulders down. Bend your knees when you shovel, do not fight the weight.","zh":"那件重铅围裙会把你肩膀往下压。铲的时候屈膝，别跟重量硬顶。","condition":{"heavy_lead":true}},{"id":"d1_brief_002b","speaker":"koval","text":"You have the light vest, so your legs are free. Move fast and do not stand over the black blocks.","zh":"你穿的是轻型背心，腿脚利索。动作要快，别站在黑石块正上方。","condition":{"heavy_lead":false}},{"id":"d1_brief_003","speaker":"koval","text":"Six blocks over the railing, ninety seconds. When the whistle blows, drop the shovel and run back here. Go!","zh":"六块扔过栏杆，九十秒。哨声一响，扔掉铁锹跑回来。上！"}],"radio_event":{"spike_rph":1200,"prompt":[{"id":"d1_radio_001","speaker":"koval","text":"Colonel, he kicked loose a hot fuel piece! Meter spiked!","zh":"上校，他踢松了一块高辐射燃料碎片！读数飙升！"},{"id":"d1_radio_002","speaker":"koval","text":"Over twelve hundred roentgen! Pull him or keep shovelling?","zh":"超过一千二百伦琴了！撤回来还是继续铲？"}],"pull":[{"id":"d1_radio_pull_01","speaker":"commander","text":"Blow the whistle now! Bring Two-One-Four back inside!","zh":"立刻吹哨！把二一四带回室内！"},{"id":"d1_radio_pull_02","speaker":"koval","text":"Copy! Two-One-Four, drop the shovel! Back to the door!","zh":"收到！二一四，扔掉铁锹！退回门口！"}],"continue":[{"id":"d1_radio_cont_01","speaker":"commander","text":"Keep him up there. Step back and finish.","zh":"让他留在上面。退后一步，干完。"},{"id":"d1_radio_cont_02","speaker":"koval","text":"Copy. Two-One-Four, step away from that spot, keep working!","zh":"收到。二一四，离开那块地方，继续干！"}],"timeout":[{"id":"d1_radio_time_01","speaker":"koval","text":"No answer from HQ! Standing order, he is coming down!","zh":"指挥部没回应！按常备命令，撤他下来！","condition":{"recall_threshold_rph":1000}},{"id":"d1_radio_time_02","speaker":"koval","text":"Static on the line! Below threshold, Two-One-Four, keep shovelling!","zh":"线路全是杂音！未达阈值，二一四，继续铲！","condition":{"recall_threshold_rph":2000}},{"id":"d1_radio_time_03","speaker":"koval","text":"HQ is silent! Standing order holds, stay on the shovel!","zh":"指挥部没声了！维持常备命令，继续铲！","condition":{"recall_threshold_rph":0}}]},"debrief":{"good":[{"id":"d1_debrief_good_01","speaker":"koval","text":"Two-One-Four is down in the washroom stripping his gear. Hands shaking, boots dusty, but he cleared the quota in Zone Katya.","zh":"二一四已经在盥洗室脱装备了。手在抖，靴子全是灰，但他完成了“卡佳”区域的定额。"},{"id":"d1_debrief_good_02","speaker":"orlova","voiced":false,"text":"Recorded dose: {dose} rem. Below the twenty-five rem limit. He is cleared for reassignment away from the reactor.","zh":"记录剂量：{dose} 雷姆。低于二十五雷姆上限。他获准调离反应堆区域。"}],"poor":[{"id":"d1_debrief_poor_01","speaker":"koval","text":"The boy froze up out there, Comrade Colonel. Stared right into the breach. Most of the graphite in Zone Katya is still sitting there.","zh":"那孩子在上面吓傻了，上校同志。直勾勾地盯着破口看。“卡佳”区域的大部分石墨还留在原地。"},{"id":"d1_debrief_poor_02","speaker":"lebedev","voiced":false,"text":"An unacceptable start. He used up his radiation allowance and left the roof almost untouched. Tomorrow's shift must make up the loss.","zh":"不可接受的开局。他用光了自己的辐射配额，屋顶却几乎原封未动。明天的班次必须补上缺口。"}],"overdose":[{"id":"d1_debrief_over_01","speaker":"koval","text":"Two-One-Four stayed too close to the hot fragments. When I pulled off his helmet in the stairwell, he could barely stand.","zh":"二一四离高辐射碎片太近了。我在楼梯间摘下他头盔时，他已经快站不住了。"},{"id":"d1_debrief_over_02","speaker":"orlova","voiced":false,"text":"Dosimeter reads {dose} rem. Over the twenty-five rem limit. I have sent him to the medical bus for blood counts.","zh":"剂量计读数 {dose} 雷姆。超过二十五雷姆上限。我已经把他送上医疗车做血检了。"}],"recalled":[{"id":"d1_debrief_rec_01","speaker":"koval","text":"We got Two-One-Four through the door before the spike cooked him. He is alive and under the limit, but the blocks are still on the roof.","zh":"我们在辐射峰值伤到他之前把二一四拉进了门。人没事，也没超标，但石块还在屋顶上。"},{"id":"d1_debrief_rec_02","speaker":"lebedev","voiced":false,"text":"You saved one private's chart and delayed the entire schedule, Colonel. The graphite does not decay while we wait.","zh":"你保住了一个列兵的档案数据，却耽误了整个工期，上校。我们等待的时候，石墨可不会自己衰变。"}]}},"2":{"day":2,"zone":"N","liquidator":"liq_361","quota":10,"hq":[{"type":"branch","id":"d2_hq_open","on":"previous_result","cases":{"good":"d2_hq_good_01","poor":"d2_hq_poor_01","overdose":"d2_hq_over_01","recalled":"d2_hq_poor_01"}},{"type":"line","id":"d2_hq_good_01","speaker":"koval","text":"Two-One-Four already got his papers, Comrade Colonel. He is on the bus out of the zone, still clutching them.","zh":"二一四已经拿到证明了，上校同志。他坐上了离开隔离区的班车，手里还紧紧攥着那张纸。","next":"d2_hq_002"},{"type":"line","id":"d2_hq_poor_01","speaker":"koval","text":"Yesterday's boy is gone, Comrade Colonel, and half his graphite is still sitting on the roof. The men in the tents know we fell behind.","zh":"昨天的那个孩子已经走了，上校同志，但他那份石墨还有一半留在屋顶上。帐篷里的士兵都知道我们进度落后了。","next":"d2_hq_002"},{"type":"line","id":"d2_hq_over_01","speaker":"koval","text":"The medics held Two-One-Four at the clinic all night drawing blood. His red card is stamped over the limit, and the whole squad saw it.","zh":"医护兵把二一四留在诊所抽了一整晚的血。他的红卡盖了超标章，整个班的士兵都看见了。","next":"d2_hq_002"},{"type":"line","id":"d2_hq_002","speaker":"koval","text":"Next up is Three-Six-One. Reservist, thirty-eight, tractor mechanic with two kids at home. His quota is ten blocks.","zh":"下一个上去的是三六一。预备役，三十八岁，拖拉机修理工，家里有两个孩子。他的定额是十块。","next":"d2_hq_005"},{"type":"line","id":"d2_hq_005","speaker":"koval","text":"We have a few lead glass visors. They save his eyes, but it is like looking through a bottle bottom, on a roof full of cable.","zh":"车间做了几个铅玻璃面罩。能护住眼睛，但戴上就像隔着瓶底看东西，而屋顶上到处是电缆。","next":"d2_choice_visor"},{"type":"choice","id":"d2_choice_visor","decision":"visor","options":[{"key":"1","label":"Standard visor. He needs clear vision on that footing.","line":{"id":"d2_hq_006a","speaker":"commander","text":"Give him the standard shield. A blind man on a roof full of cables will never clear ten blocks.","zh":"给他普通面罩。在满是电缆的屋顶上看不清路，根本不可能清完十块。"},"effects":{"lead_visor":false},"next":"d2_hq_015"},{"key":"2","label":"Lead glass visor. Shield his eyes from the scatter.","line":{"id":"d2_hq_006b","speaker":"commander","text":"Put him in the lead glass visor. He is a mechanic with two children, he needs his eyesight after this.","zh":"给他戴铅玻璃面罩。他是个有两个孩子的修理工，以后还得靠眼睛吃饭。"},"effects":{"lead_visor":true},"next":"d2_hq_015"}]},{"type":"line","id":"d2_hq_015","speaker":"koval","text":"Comrade Colonel, the boys have seen what Natasha reads. If they watch those needles, half of them will not go up.","zh":"上校同志，弟兄们已经看到“娜塔莎”的读数了。要是一直盯着指针，一半的人都不会上去。","next":"d2_choice_dosimeter"},{"type":"choice","id":"d2_choice_dosimeter","decision":"dosimeter","options":[{"key":"1","label":"Issue the dosimeters. Tell them the real readings.","line":{"id":"d2_hq_018a","speaker":"commander","text":"Give him the meter and the real numbers. If he is going to pay for this, he gets to know the price.","zh":"把剂量计和真实读数都给他。既然要他付出代价，就该让他知道代价是多少。"},"effects":{"dosimeter_issued":true},"next":"d2_hq_019a"},{"key":"2","label":"Take the dosimeters. Keep them calm.","line":{"id":"d2_hq_018b","speaker":"commander","text":"Take the meters. He goes up with a shovel and the whistle, nothing else. I will carry the numbers.","zh":"收走剂量计。他上去只带铁锹，只听哨声，别的什么都不带。数字由我来扛。"},"effects":{"dosimeter_issued":false},"next":"d2_hq_019b"}]},{"type":"line","id":"d2_hq_019a","speaker":"koval","text":"Then he hears the truth from me at the door. Natasha reads seven hundred an hour. Your standing order for the whistle?","zh":"那就由我在门口把实话告诉他。“娜塔莎”区域本底每小时七百伦琴。今天吹哨的常备命令怎么定？","next":"d2_choice_standing"},{"type":"line","id":"d2_hq_019b","speaker":"koval","text":"Yes, Comrade Colonel. He will hear my meter clicking anyway. Natasha reads seven hundred an hour. Your standing order for the whistle?","zh":"是，上校同志。反正他也听得到我这台表的咔嗒声。“娜塔莎”区域本底每小时七百伦琴。今天吹哨的常备命令怎么定？","next":"d2_choice_standing"},{"type":"choice","id":"d2_choice_standing","decision":"standing_order","options":[{"key":"1","label":"Recall automatically at one thousand roentgen per hour.","line":{"id":"d2_hq_013a","speaker":"commander","text":"One thousand roentgen per hour. If the radio cuts out on a spike, blow the whistle at one thousand.","zh":"每小时一千伦琴。如果遇到峰值时无线电中断，到一千就吹哨。"},"effects":{"recall_threshold_rph":1000},"next":"d2_hq_014"},{"key":"2","label":"Recall automatically at two thousand roentgen per hour.","line":{"id":"d2_hq_013b","speaker":"commander","text":"Set the automatic recall at two thousand roentgen per hour. Seven hundred base leaves no room for a low threshold.","zh":"自动撤离设在每小时两千伦琴。七百的本底容不下太低的阈值。"},"effects":{"recall_threshold_rph":2000},"next":"d2_hq_014"},{"key":"3","label":"Never recall automatically. Hold until the ninety-second whistle.","line":{"id":"d2_hq_013c","speaker":"commander","text":"No automatic recall on the meter. He stays until ninety seconds or until you hear my voice.","zh":"不按辐射表自动撤离。除非听到我的声音，否则他要干满九十秒。"},"effects":{"recall_threshold_rph":0},"next":"d2_hq_014"}]},{"type":"line","id":"d2_hq_014","speaker":"koval","text":"Understood. Three-Six-One is waiting by the stairs with his shovel. Switching to radio.","zh":"明白。三六一正拿铁锹在楼梯旁等着。切到无线电。","next":null}],"briefing":[{"id":"d2_brief_002a","speaker":"koval","text":"Keep that lead glass visor down. Your view is narrow, so turn your whole head before you swing the shovel.","zh":"把铅玻璃面罩放下。视野很窄，挥铁锹前先把整个头转过去看清。","condition":{"lead_visor":true}},{"id":"d2_brief_002b","speaker":"koval","text":"You have the clear visor so you do not trip on the cables. Do not stare down into the breach.","zh":"你戴的是透明面罩，免得被电缆绊倒。千万别低头盯着破口里面看。","condition":{"lead_visor":false}},{"id":"d2_brief_004a","speaker":"koval","text":"Here is your meter. The needle will sit in the red the whole time. Look at it once, then work.","zh":"这是你的剂量计。指针会一直停在红区。看一眼就行，然后干活。","condition":{"dosimeter_issued":true}},{"id":"d2_brief_004b","speaker":"koval","text":"No meter today. Orders. Listen for my whistle, not for the clicks.","zh":"今天不发剂量计。这是命令。听我的哨声，别去听咔嗒声。","condition":{"dosimeter_issued":false}},{"id":"d2_brief_003b","speaker":"koval","text":"Ten blocks, ninety seconds. Watch your boots in the soft tar, and run on my whistle. Go!","zh":"十块，九十秒。留神脚下的软沥青，哨响就跑。上！"}],"radio_event":{"spike_rph":1600,"prompt":[{"id":"d2_radio_001","speaker":"koval","text":"Colonel, his boot stuck near a pipe! Sixteen hundred roentgen!","zh":"上校，他的靴子卡在管道旁了！一千六百伦琴！"},{"id":"d2_radio_002","speaker":"koval","text":"Stuck in the hot spot! Pull him or finish?","zh":"卡在热点里了！撤回来还是干完？"}],"pull":[{"id":"d2_radio_pull_01","speaker":"commander","text":"Blow the whistle! Get Three-Six-One off the roof now!","zh":"吹哨！立刻让三六一下屋顶！"},{"id":"d2_radio_pull_02","speaker":"koval","text":"Whistle blowing! Three-Six-One, leave the shovel, come down!","zh":"吹哨了！三六一，丢下铁锹，下来！"}],"continue":[{"id":"d2_radio_cont_01","speaker":"commander","text":"Tell him to wrench his boot free and keep working.","zh":"叫他把靴子拔出来，继续干。"},{"id":"d2_radio_cont_02","speaker":"koval","text":"Copy! Pull free of the tar, Three-Six-One, keep throwing!","zh":"收到！从沥青里拔出来，三六一，继续扔！"}],"timeout":[{"id":"d2_radio_time_01","speaker":"koval","text":"No answer! Over one thousand, blowing the whistle, come down!","zh":"没回应！超过一千了，吹哨，快下来！","condition":{"recall_threshold_rph":1000}},{"id":"d2_radio_time_02","speaker":"koval","text":"Radio dead! Under two thousand, he stays on the roof!","zh":"无线电断了！低于两千，他留在屋顶继续干！","condition":{"recall_threshold_rph":2000}},{"id":"d2_radio_time_03","speaker":"koval","text":"No reply from HQ! No recall threshold, he stays up!","zh":"指挥部没回应！无撤离阈值，他留在上面！","condition":{"recall_threshold_rph":0}}]},"debrief":{"good":[{"id":"d2_debrief_good_01","speaker":"koval","text":"Three-Six-One came down steady, Comrade Colonel. Scraped the tar off his boots and asked for a cigarette. Zone Natasha is clear.","zh":"三六一稳稳当当地下来了，上校同志。刮掉靴子上的沥青就要了根烟。“娜塔莎”区域清理完毕。"},{"id":"d2_debrief_good_02","speaker":"orlova","voiced":false,"text":"Recorded dose: {dose} rem. Within the twenty-five rem limit. His discharge certificate is signed.","zh":"记录剂量：{dose} 雷姆。在二十五雷姆上限以内。他的退役证明已经签字了。"}],"poor":[{"id":"d2_debrief_poor_01","speaker":"koval","text":"He fought the footing the whole ninety seconds, Comrade Colonel. Cursing under his breath, and half the blocks in Natasha are still up there.","zh":"那九十秒他一直在跟脚下的路面较劲，上校同志。嘴里一直在骂，而“娜塔莎”区域还有一半石块留在上面。"},{"id":"d2_debrief_poor_02","speaker":"lebedev","voiced":false,"text":"Dose recorded at {dose} rem for a half-finished sector. The October first deadline has passed, Colonel. The Commission will want to know why.","zh":"受了 {dose} 雷姆的剂量，却只干完一半。十月一日的期限已经过了，上校。委员会会要你解释原因。"}],"overdose":[{"id":"d2_debrief_over_01","speaker":"koval","text":"Three-Six-One leaned his chest against the pipe rack to pry a block loose. He knows he went over the limit, he did not even crack a joke.","zh":"三六一把胸口抵在管架上去撬一块石头。他知道自己超标了，连句玩笑话都没说。"},{"id":"d2_debrief_over_02","speaker":"orlova","voiced":false,"text":"Dosimeter reads {dose} rem. Above the twenty-five rem limit. I have logged him for medical observation before he returns to his children.","zh":"剂量计读数 {dose} 雷姆。超过二十五雷姆上限。我已经登记让他先接受医学观察，之后再回家看孩子。"}],"recalled":[{"id":"d2_debrief_rec_01","speaker":"koval","text":"Three-Six-One pulled his boot out of the tar on the whistle and made the door. He is under the limit, but Natasha is still littered with graphite.","zh":"三六一听到哨声把靴子从沥青里拔出来跑回了门口。剂量没超标，但“娜塔莎”区域还到处是石墨。"},{"id":"d2_debrief_rec_02","speaker":"lebedev","voiced":false,"text":"Recorded dose: {dose} rem. You pulled him off early, Colonel. Natasha is unfinished, and the Commission will not grant an extension.","zh":"记录剂量：{dose} 雷姆。你提前把人撤下来了，上校。“娜塔莎”没清完，委员会绝不会批准延期。"}]}}},"calls":{"1/pre_shift":{"id":"call_d1_pre_01","speaker":"koval","text":"Comrade Colonel, Koval at the stairwell. Pick up.","zh":"上校同志，科瓦尔在楼梯间呼叫。请接听。"},"1/debrief":{"id":"call_d1_deb_01","speaker":"koval","text":"Comrade Colonel, Two-One-Four is back inside. Pick up.","zh":"上校同志，二一四已经回到室内。请接听。"},"2/pre_shift":{"id":"call_d2_pre_01","speaker":"koval","text":"Comrade Colonel, Koval on the line for Zone Natasha.","zh":"上校同志，科瓦尔呼叫，汇报“娜塔莎”区域情况。"},"2/debrief":{"id":"call_d2_deb_01","speaker":"koval","text":"Comrade Colonel, Three-Six-One is off the roof. Pick up.","zh":"上校同志，三六一已经下屋顶了。请接听。"}},"roofBarks":{"liq_214":{"shift_started":{"id":"bark_214_start_01","speaker":"liq_214","text":"Okay, okay, just ninety seconds. Keep moving.","zh":"好，好，只有九十秒。继续动起来。"},"first_block_picked":{"id":"bark_214_first_01","speaker":"liq_214","text":"Heavier than it looks. Keep it off me.","zh":"比看着要沉。别让它碰到我。"},"block_thrown":{"id":"bark_214_throw_01","speaker":"liq_214","text":"Over the edge. Next one, hurry.","zh":"扔下去了。下一块，快点。"},"carrying_long":{"id":"bark_214_carry_01","speaker":"liq_214","text":"Throw it, throw it, stop holding it!","zh":"扔掉，快扔掉，别一直端着！"},"near_breach":{"id":"bark_214_breach_01","speaker":"liq_214","text":"The air is shimmering down there. Step back!","zh":"底下的空气在发颤。快退后！"},"dose_high":{"id":"bark_214_dose_01","speaker":"liq_214","text":"Hear that clicking? Too fast, way too fast!","zh":"听到那咔哒声了吗？太快了，太快了！"},"whistle_warning":{"id":"bark_214_warn_01","speaker":"liq_214","text":"Almost time. Just one more, hurry!","zh":"快到时间了。再弄一块，快！"},"shift_ended_time":{"id":"bark_214_time_01","speaker":"liq_214","text":"That is the whistle! Drop it, run!","zh":"哨响了！扔下，快跑！"},"shift_ended_recalled":{"id":"bark_214_rec_01","speaker":"liq_214","text":"Early whistle! They are pulling me back!","zh":"提前吹哨了！他们要把我撤回去！"},"shift_ended_overdose":{"id":"bark_214_over_01","speaker":"liq_214","text":"Over the limit. I stayed too long.","zh":"超标了。我待得太久了。"},"heavy_lead":{"id":"bark_214_lead_01","speaker":"liq_214","text":"This lead apron is crushing my ribs.","zh":"这件铅围裙压得我肋骨生疼。","condition":{"heavy_lead":true}}},"liq_361":{"shift_started":{"id":"bark_361_start_01","speaker":"liq_361","text":"Nice view. Worse than threshing in August.","zh":"风景不错。比八月里打谷子还难受。"},"first_block_picked":{"id":"bark_361_first_01","speaker":"liq_361","text":"Heavy little bastard. Come on, up you go.","zh":"沉甸甸的小混蛋。来吧，起来。"},"block_thrown":{"id":"bark_361_throw_01","speaker":"liq_361","text":"Back where you came from. Next one.","zh":"从哪来回哪去吧。下一块。"},"carrying_long":{"id":"bark_361_carry_01","speaker":"liq_361","text":"Do not cradle it like a baby. Throw!","zh":"别像抱孩子似的抱在怀里。快扔！"},"near_breach":{"id":"bark_361_breach_01","speaker":"liq_361","text":"Hell of a hole down there. Step back.","zh":"底下真是个鬼窟窿。退后点。"},"dose_high":{"id":"bark_361_dose_01","speaker":"liq_361","text":"Meter is singing like a locust. Move off.","zh":"辐射表叫得跟蝗虫一样。快挪开。"},"whistle_warning":{"id":"bark_361_warn_01","speaker":"liq_361","text":"Short seconds left. One last heave.","zh":"没几秒了。最后铲一下。"},"shift_ended_time":{"id":"bark_361_time_01","speaker":"liq_361","text":"There is the whistle. Shift is over.","zh":"哨响了。这班干完了。"},"shift_ended_recalled":{"id":"bark_361_rec_01","speaker":"liq_361","text":"Pulling me early? Must be a bad spike.","zh":"提前撤我？肯定遇上强峰值了。"},"shift_ended_overdose":{"id":"bark_361_over_01","speaker":"liq_361","text":"Damn. That put me past twenty-five.","zh":"该死。这下超过二十五了。"},"lead_visor":{"id":"bark_361_visor_01","speaker":"liq_361","text":"Like looking through a welded pipe.","zh":"简直像隔着焊管往外看。","condition":{"lead_visor":true}},"dosimeter_withheld":{"id":"bark_361_nodos_01","speaker":"liq_361","text":"No meter. Then I will count myself.","zh":"没发剂量计。那我自己数着吧。","condition":{"dosimeter_issued":false}}}},"radioBarks":{"shift_started":{"id":"radio_start_01","speaker":"koval","text":"Clock is running! Get to the blocks!","zh":"开始计时了！快去石块那儿！"},"thirty_seconds_left":{"id":"radio_thirty_01","speaker":"koval","text":"Thirty seconds left! Keep the shovel moving!","zh":"还剩三十秒！铁锹别停！"},"whistle_warning":{"id":"radio_whistle_01","speaker":"koval","text":"Whistle! Time is up, run for the door!","zh":"吹哨了！时间到，快往门口跑！"},"carrying_long":{"id":"radio_slow_01","speaker":"koval","text":"Do not stand there holding it! Move!","zh":"别端着它站着！快走！"},"block_thrown":{"id":"radio_good_01","speaker":"koval","text":"Good throw! Grab the next one!","zh":"扔得好！接着铲下一块！"}},"ending":{"met_truth":[{"id":"end_mt_01","speaker":"koval","text":"Comrade Colonel, I just bolted the stairwell door. Katya and Natasha are clear. Block Three can restart on schedule.","zh":"上校同志，我刚把楼梯间的门闩上。“卡佳”和“娜塔莎”都清干净了。三号机组可以按期重启。"},{"id":"end_mt_02","speaker":"commander","text":"And the men, Sergeant? How is Three-Six-One holding up down there?","zh":"士兵们呢，中士？三六一在下面情况怎么样？"},{"id":"end_mt_03","speaker":"koval","text":"He is washing the grey dust off his face at the sink. He read his own dosimeter before he handed it to Orlova.","zh":"他正在水池边洗脸上的灰尘。把剂量计交给奥尔洛娃之前，他自己看了读数。"},{"id":"end_mt_04","speaker":"commander","text":"We counted their time in seconds, and they gave us every one. Make sure their real numbers go into the medical log.","zh":"我们按秒算他们的时间，他们一秒都没少给。确保把他们的真实读数写进医疗记录。"},{"id":"end_mt_05","speaker":"koval","text":"Orlova is writing them in ink right now, Comrade Colonel. I am hanging up the phone and taking the squad down to the buses.","zh":"奥尔洛娃正用钢笔往本子上写呢，上校同志。我挂电话了，这就带全班去坐班车。"}],"met_withheld":[{"id":"end_mw_01","speaker":"koval","text":"Comrade Colonel, the stairwell door is locked. Both zones are clear of graphite before the October first deadline.","zh":"上校同志，楼梯间的门锁上了。赶在十月一日最后期限前，两个区域的石墨都清完了。"},{"id":"end_mw_02","speaker":"commander","text":"The Commission has its clean roof. How is Three-Six-One?","zh":"委员会拿到他们要的干净屋顶了。三六一怎么样？"},{"id":"end_mw_03","speaker":"koval","text":"Sitting on the bench with his boots off. He looked at the empty pocket on his chest, then looked at me, and said nothing.","zh":"脱了靴子坐在长椅上呢。他看了看胸前空着的口袋，又看了看我，什么也没说。"},{"id":"end_mw_04","speaker":"commander","text":"He finished the job in Natasha without panicking. That was the reason we kept the meters at the desk.","zh":"他在“娜塔莎”干完了活，没有慌乱。这就是我们把剂量计留在桌上的原因。"},{"id":"end_mw_05","speaker":"koval","text":"Yes, Comrade Colonel, he stayed calm. Orlova is filling in the estimated cards now, and nobody down here is looking anyone in the eye.","zh":"是的，上校同志，他很冷静。奥尔洛娃正在填估算卡，下面这儿没人敢直视别人的眼睛。"}],"missed_truth":[{"id":"end_xt_01","speaker":"koval","text":"Comrade Colonel, the shift is over, and there is still graphite lying on the roof. We missed the October first deadline.","zh":"上校同志，班次结束了，屋顶上还有石墨残留。我们没能赶上十月一日的最后期限。"},{"id":"end_xt_02","speaker":"commander","text":"Lebedev is already writing his report to the Commission. A fresh regiment will take over the stairwell tomorrow.","zh":"列别捷夫已经在给委员会写报告了。明天会有一支新部队来接管楼梯间。"},{"id":"end_xt_03","speaker":"koval","text":"Then another sergeant will stand at this door with a whistle. At least our men went up knowing the real numbers on their chests.","zh":"那就会有另一个中士拿哨子站在这扇门前了。至少我们的士兵上去时，清楚自己胸口上的真实数字。"},{"id":"end_xt_04","speaker":"commander","text":"We did not lie to them, Koval, and we did not spend them like machines. Bring your squad down.","zh":"我们没有骗他们，科瓦尔，也没有把他们当机器消耗掉。把你的班带下来吧。"},{"id":"end_xt_05","speaker":"koval","text":"Copy that, Comrade Colonel. Stacking the shovels by the wall for the next unit now.","zh":"收到，上校同志。现在把铁锹靠墙码好，留给下一支部队。"}],"missed_withheld":[{"id":"end_xw_01","speaker":"koval","text":"Comrade Colonel, I shut the stairwell door, and the roof is still not clear. We missed the October first deadline.","zh":"上校同志，我关上了楼梯间的门，屋顶还是没清干净。我们错过了十月一日的最后期限。"},{"id":"end_xw_02","speaker":"commander","text":"I see it on the tally board, Sergeant. Another detachment will have to go up into Natasha tomorrow.","zh":"我在统计板上看到了，中士。明天得派另一支分队上“娜塔莎”区域了。"},{"id":"end_xw_03","speaker":"koval","text":"Three-Six-One is asking Orlova what his dose was, Comrade Colonel. We took his meter away, and we still left graphite on that roof.","zh":"三六一正在问奥尔洛娃他受了多少剂量，上校同志。我们收走了他的剂量计，却还是把石墨留在了那个屋顶上。"},{"id":"end_xw_04","speaker":"commander","text":"Have Orlova give him the calculated reading from the stopwatch. Every decision on that roof belongs to my file, not yours.","zh":"让奥尔洛娃把根据秒表算出来的读数告诉他。关于那个屋顶的每一个决定都记在我的档案里，不由你担责。"},{"id":"end_xw_05","speaker":"koval","text":"Paper does not take the dose, Comrade Colonel. I am hanging up now and taking the men to wash.","zh":"纸张是不会替人吃剂量的，上校同志。我挂了，带弟兄们去冲洗。"}],"epilogue":[{"id":"end_epi_01","speaker":"epilogue","voiced":false,"text":"In September 1986, after remote-controlled robots failed in the radiation, Soviet soldiers and reservists cleared graphite from the roof of Chernobyl Unit 3 and its ventilation stack by hand.","zh":"1986 年 9 月，遥控机器人在强辐射下失灵后，苏联士兵和预备役人员用双手清理了切尔诺贝利 3 号机组屋顶和通风烟囱平台上的石墨。"},{"id":"end_epi_02","speaker":"epilogue","voiced":false,"text":"In improvised lead armour and respirators, they worked in zones code-named Katya, Natasha and Masha, in shifts counted in seconds.","zh":"他们穿着自制的铅护具，戴着呼吸器，在代号“卡佳”“娜塔莎”“玛莎”的区域作业，每班以秒计算。"},{"id":"end_epi_03","speaker":"epilogue","voiced":false,"text":"Film shot on the roof shows white specks where radiation struck the film as they shovelled graphite down into the ruins of Unit 4.","zh":"在屋顶拍下的胶片上，辐射打在底片上留下了白点，记录下他们把石墨铲回 4 号机组废墟的画面。"},{"id":"end_epi_04","speaker":"epilogue","voiced":false,"text":"Dedicated to the liquidators who went onto the roof.","zh":"谨以此献给走上屋顶的清理人员。"}]}}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>window.THREE || document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');</script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var DATA = JSON.parse($('game-data').textContent || '{}');
+  var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var stage = $('stage');
+  // phones and tablets get the touch controls; #touch forces them on a desktop for testing
+  var coarse = location.hash === '#touch' || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+
+  // ---------- opening statement: stays up until the viewer taps or presses a key ----------
+  var intro = $('intro'), introReady = false;
+  document.documentElement.classList.add('intro-on');
+  try { intro.focus({ preventScroll: true }); } catch (e) {}
+  setTimeout(function(){ introReady = true; intro.classList.add('ready'); }, reduced ? 0 : 900);
+  function closeIntro(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (!introReady || intro.classList.contains('out')) return;
+    intro.classList.add('out');
+    document.documentElement.classList.remove('intro-on');
+    document.removeEventListener('keydown', introKey, true);
+    setTimeout(function(){ intro.hidden = true; }, reduced ? 0 : 650);
+    if (!$('startCard').hidden) try { $('startBtn').focus({ preventScroll: true }); } catch (_) {}
+  }
+  function introKey(e){ if (e.altKey || e.ctrlKey || e.metaKey || e.key === 'Tab') return; closeIntro(e); }
+  intro.addEventListener('click', closeIntro);
+  document.addEventListener('keydown', introKey, true);
+
+  if (DATA.commit) $('commitId').textContent = DATA.commit;
+  if (!DATA.days || !DATA.days[1]) { $('status').textContent = '没有剧本数据：需要先运行拷贝脚本。'; return; }
+
+  // ---------- rules, mirroring command/game_state.gd ----------
+  var DAYS = 2, DOSE_LIMIT = 25, GOOD_SHARE = 0.75;
+  var ZONE_RPH = { K: 500, N: 700, M: 1400 };
+  var ZONE_NAMES = { K: 'Katya', N: 'Natasha', M: 'Masha' };
+  var SPEAKER = { koval: 'SGT. KOVAL · SQUAD LEADER', commander: 'COMMANDER · FIELD HQ', lebedev: 'DEPUTY LEBEDEV · GOVERNMENT COMMISSION', orlova: 'DOSIMETRIST ORLOVA', epilogue: '' };
+  var RADIO_OPTIONS = [ { key: '1', label: 'Pull him out.', answer: 'pull' }, { key: '2', label: 'Let him keep working.', answer: 'continue' } ];
+  function zoneLabel(z){ return 'ZONE ' + z + ' «' + ZONE_NAMES[z].toUpperCase() + '»'; }
+  function pad3(n){ return ('00' + n).slice(-3); }
+  function mmss(t){ t = Math.max(0, Math.floor(t)); return ('0' + Math.floor(t / 60)).slice(-2) + ':' + ('0' + t % 60).slice(-2); }
+
+  var GS = { day: 1, config: null, configs: [], results: [], showZh: true };
+  function newConfig(day){
+    var d = DATA.days[day], liq = d.liquidator;
+    return { day: day, zone: d.zone, quota: d.quota, base_rph: ZONE_RPH[d.zone], heavy_lead: false, lead_visor: false, scouted: false,
+      shift_seconds: 90, dosimeter_issued: true, recall_threshold_rph: 0, liquidator_no: parseInt(liq.split('_')[1], 10), voice_id: liq };
+  }
+  function applyEffects(e){
+    for (var k in e) { if (k === 'quota_delta') GS.config.quota += +e[k]; else GS.config[k] = e[k]; }
+    applyLook();
+  }
+  function classify(r){
+    if (r.over_limit || r.dose_rem >= DOSE_LIMIT) return 'overdose';
+    if (r.recalled_early) return 'recalled';
+    if (r.cleared >= Math.ceil(r.total * GOOD_SHARE)) return 'good';
+    return 'poor';
+  }
+  function fact(key){
+    if (key === 'previous_result') return GS.results.length ? classify(GS.results[GS.results.length - 1]) : 'none';
+    return GS.config ? GS.config[key] : null;
+  }
+  function passes(cond){
+    if (!cond) return true;
+    for (var k in cond) {
+      var want = cond[k], have = fact(k);
+      if (typeof want === 'number' && typeof have === 'number') { if (Math.abs(want - have) > 1e-6) return false; }
+      else if (String(want) !== String(have)) return false;
+    }
+    return true;
+  }
+  function deadlineMet(){ return GS.results.length === DAYS && GS.results.every(function(r){ return r.cleared >= r.total; }); }
+  function truthTold(){ return GS.configs.length < DAYS || GS.configs[DAYS - 1].dosimeter_issued; }
+  function header(c){ return 'FIELD HQ · DAY ' + c.day + ' / ' + DAYS + ' · ' + zoneLabel(c.zone) + ' · LIQUIDATOR №' + pad3(c.liquidator_no); }
+  function resultLine(c, r){ return '№' + pad3(c.liquidator_no) + ' · ' + r.cleared + ' / ' + r.total + ' BLOCKS · ' + r.dose_rem.toFixed(1) + ' REM · ' + Math.round(r.seconds_on_roof) + ' S ON THE ROOF'; }
+  function fill(text, ctx){ return String(text || '').replace(/\{(\w+)\}/g, function(m, k){ return ctx && ctx[k] != null ? ctx[k] : m; }); }
+  function words(t){ return String(t).split(/\s+/).filter(Boolean).length; }
+  function setStatus(t){ $('status').textContent = t; }
+
+  // ---------- cancellable waits (restart rejects everything pending) ----------
+  var CANCEL = { cancelled: true }, pending = [];
+  function track(executor){
+    var entry = {};
+    var p = new Promise(function(res, rej){ entry.res = res; entry.rej = rej; executor(function(v){ remove(); res(v); }, entry); });
+    function remove(){ var i = pending.indexOf(entry); if (i >= 0) pending.splice(i, 1); }
+    entry.done = function(v){ remove(); entry.res(v); };
+    pending.push(entry);
+    return p;
+  }
+  function cancelAll(){ var list = pending.slice(); pending = []; list.forEach(function(e){ e.rej(CANCEL); }); }
+  function wait(sec){ return track(function(done){ setTimeout(done, sec * 1000); }); }
+
+  // ---------- subtitles (overlay.say) ----------
+  var subEl = $('sub'), sayBusy = false, sayAdvance = null, gen = 0;
+  function showSub(line, ctx){
+    $('subSp').textContent = (SPEAKER[line.speaker] != null ? SPEAKER[line.speaker] : (line.speaker || '').toUpperCase()) + (R.running && line.speaker === 'koval' ? ' · RADIO' : '');
+    $('subEn').textContent = fill(line.text, ctx);
+    $('subZh').textContent = GS.showZh ? fill(line.zh, ctx) : '';
+    subEl.classList.add('on');
+  }
+  async function say(lines, ctx){
+    var my = gen;
+    sayBusy = true;
+    try {
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (!line || !passes(line.condition)) continue;
+        showSub(line, ctx);
+        if (line.speaker === 'koval') radioCrackle(0.18);
+        var sec = 1 + words(line.text) * 0.33 + 0.3;
+        await track(function(done){ var t = setTimeout(done, sec * 1000); sayAdvance = function(){ if (!R.running) { clearTimeout(t); done(); } }; });
+        sayAdvance = null;
+      }
+    } finally { if (my === gen) { subEl.classList.remove('on'); sayBusy = false; sayAdvance = null; } }
+  }
+
+  // ---------- connect prompt ----------
+  var connectEl = $('connect'), connectBtn = $('connectBtn'), connectState = null;
+  function promptConnect(timeout, spaceOnly){
+    // on the roof the mouse is busy turning the head, so desktop connects with Space; touch players tap the button
+    connectBtn.textContent = spaceOnly && !touch ? '按空格接通 · PRESS SPACE' : spaceOnly ? '▶  点此接通 · TAP TO CONNECT' : '▶  接通指挥部 · CONNECT TO HQ';
+    $('connectBar').hidden = !timeout;
+    connectEl.hidden = false;
+    return track(function(done){
+      var start = performance.now();
+      connectState = { spaceOnly: spaceOnly, timeout: timeout, start: start, finish: function(v){ connectEl.hidden = true; connectState = null; done(v); } };
+    });
+  }
+  function cancelConnect(){ if (connectState) connectState.finish(false); }
+  connectBtn.addEventListener('click', function(e){ e.stopPropagation(); if (connectState && (!connectState.spaceOnly || touch)) { initAudio(); connectState.finish(true); } });
+
+  // ---------- command overlay ----------
+  var ovlOpen = false, typing = null, advanceFn = null, choiceFn = null;
+  function openOverlay(head, lineLabel){
+    ovlOpen = true;
+    $('oHeader').textContent = head;
+    $('oLine').textContent = lineLabel || (R.running ? 'LINE OPEN · ROOF → FIELD HQ' : 'LINE OPEN · STAIRWELL → FIELD HQ');
+    $('oTimer').hidden = !R.running;
+    $('oT').innerHTML = mmss(R.elapsed) + ' <small>/ ' + mmss(GS.config.shift_seconds) + '</small>';
+    $('oStats').hidden = true; $('oSo').hidden = true;
+    $('oSpk').textContent = ''; $('oText').textContent = ''; $('oZh').textContent = ''; $('oChoices').innerHTML = '';
+    $('oHint').hidden = true;
+    stage.classList.add('ovl-open');
+    R.setPaused(true);
+    if (document.pointerLockElement) document.exitPointerLock();
+    duck(true);
+    return wait(reduced ? 0 : 0.35);
+  }
+  function closeOverlay(){
+    stage.classList.remove('ovl-open');
+    ovlOpen = false;
+    duck(false);
+    R.setPaused(false);
+    return wait(reduced ? 0 : 0.35);
+  }
+  function showStats(text){ $('oStats').textContent = text; $('oStats').hidden = false; }
+  function typeLine(line, ctx){
+    var spk = SPEAKER[line.speaker] != null ? SPEAKER[line.speaker] : String(line.speaker || '').toUpperCase();
+    $('oSpk').textContent = spk;
+    $('oZh').textContent = '';
+    $('oChoices').innerHTML = '';
+    var full = fill(line.text, ctx), zh = fill(line.zh, ctx), el = $('oText');
+    el.textContent = '';
+    return track(function(done){
+      var i = 0, last = performance.now(), me = { finish: finishType };
+      function finishType(){ if (typing !== me && typing !== null) return; el.textContent = full; $('oZh').textContent = GS.showZh ? zh : ''; typing = null; done(); }
+      if (reduced) { typing = null; el.textContent = full; $('oZh').textContent = GS.showZh ? zh : ''; done(); return; }
+      typing = me;
+      (function step(now){
+        if (typing !== me) return;
+        i = Math.min(full.length, i + Math.max(1, Math.round((now - last) / 1000 * 55))); last = now;
+        el.textContent = full.slice(0, i);
+        if (i >= full.length) finishType(); else requestAnimationFrame(step);
+      })(performance.now());
+    });
+  }
+  async function showLine(line, ctx){
+    await typeLine(line, ctx);
+    $('oHint').hidden = false;
+    await track(function(done){ advanceFn = function(){ advanceFn = null; done(); }; });
+    $('oHint').hidden = true;
+  }
+  async function playLines(lines, ctx){
+    for (var i = 0; i < lines.length; i++) if (passes(lines[i].condition)) await showLine(lines[i], ctx);
+  }
+  function choose(options){
+    var box = $('oChoices');
+    box.innerHTML = ''; box.className = 'ch' + (options.length === 2 ? ' two' : '');
+    $('oSpk').textContent = $('oSpk').textContent || 'COMMANDER · FIELD HQ';
+    var standing = GS.config.recall_threshold_rph;
+    if (R.running) { $('oSo').innerHTML = 'STANDING ORDER: <b>' + (standing > 0 ? 'RECALL AT ' + standing + ' R/H' : 'NO AUTOMATIC RECALL') + '</b>'; $('oSo').hidden = false; }
+    return track(function(done){
+      options.forEach(function(o){
+        var b = document.createElement('button'); b.type = 'button';
+        b.innerHTML = '<b></b><span></span>';
+        b.firstChild.textContent = o.key; b.lastChild.textContent = o.label;
+        b.addEventListener('click', function(e){ e.stopPropagation(); pick(o); });
+        box.appendChild(b);
+      });
+      function pick(o){ choiceFn = null; box.innerHTML = ''; $('oSo').hidden = true; done(o); }
+      choiceFn = function(key){ var o = options.filter(function(x){ return x.key === key; })[0]; if (o) pick(o); };
+    });
+  }
+  async function runNodes(nodes, startId, ctx){
+    var map = {}; nodes.forEach(function(n){ map[n.id] = n; });
+    var id = startId, guard = 0;
+    while (id && map[id] && guard++ < 200) {
+      var n = map[id];
+      if (n.type === 'branch') { id = n.cases[fact(n.on)] || null; continue; }
+      if (n.type === 'choice') {
+        var o = await choose(n.options);
+        if (o.line) await showLine(o.line, ctx);
+        applyEffects(o.effects || {});
+        id = o.next; continue;
+      }
+      if (passes(n.condition)) await showLine(n, ctx);
+      id = n.next;
+    }
+  }
+  $('ovl').addEventListener('click', function(){ advance(); });
+  function advance(){
+    if (typing) { typing.finish(); return; }
+    if (advanceFn) advanceFn();
+  }
+
+  // ---------- barks (audio/bark_player.gd, simplified) ----------
+  var selfEl = $('self'), barkQueue = [], lastSelf = -99, selfUntil = 0, radioUntil = 0, clock = 0, doseHighArmed = true;
+  function barkLine(trigger, radio){
+    if (radio) return DATA.radioBarks[trigger];
+    var set = DATA.roofBarks[GS.config.voice_id] || {};
+    return set[trigger];
+  }
+  function requestBark(trigger, radio, ttl){
+    if (!barkLine(trigger, radio)) return;
+    if (barkQueue.some(function(q){ return q.trigger === trigger && q.radio === radio; })) return;
+    barkQueue.push({ trigger: trigger, radio: radio, expires: clock + (ttl || 1.5) });
+  }
+  function updateBarks(){
+    if (clock > selfUntil) selfEl.classList.remove('on');
+    if (clock > radioUntil && !sayBusy) subEl.classList.remove('on');
+    if (ovlOpen) return;
+    for (var i = 0; i < barkQueue.length; i++) {
+      var q = barkQueue[i];
+      if (clock > q.expires) { barkQueue.splice(i--, 1); continue; }
+      var line = barkLine(q.trigger, q.radio), sec = 1 + words(line.text) * 0.33;
+      if (q.radio) {
+        if (sayBusy || clock < radioUntil) continue;
+        showSub(line); radioCrackle(0.18); radioUntil = clock + sec;
+      } else {
+        if (clock < selfUntil || clock - lastSelf < 6) continue;
+        $('selfEn').textContent = line.text; $('selfZh').textContent = GS.showZh ? (line.zh || '') : '';
+        selfEl.classList.add('on'); selfUntil = clock + sec; lastSelf = clock;
+      }
+      barkQueue.splice(i--, 1);
+    }
+  }
+  function barksIdle(){ return track(function(done){ var t0 = clock; (function check(){ if (!barkQueue.length && clock >= selfUntil || clock - t0 > 4) done(); else setTimeout(check, 100); })(); }); }
+
+  // ---------- audio (procedural, like audio/roof_ambience.gd) ----------
+  var ac = null, master, roofBus, clickBuf, breathGain, breathFilter, windGain;
+  function noiseBuffer(sec){
+    var b = ac.createBuffer(1, ac.sampleRate * sec, ac.sampleRate), d = b.getChannelData(0), last = 0;
+    for (var n = 0; n < d.length; n++) { var w = Math.random() * 2 - 1; last = (last + 0.04 * w) / 1.04; d[n] = last * 3.2; }
+    return b;
+  }
+  function loopNoise(type, freq, q, gain){
+    var src = ac.createBufferSource(); src.buffer = noiseBuffer(3); src.loop = true;
+    var f = ac.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    var g = ac.createGain(); g.gain.value = gain;
+    src.connect(f); f.connect(g); g.connect(roofBus); src.start();
+    return { g: g, f: f };
+  }
+  function initAudio(){
+    if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+    var Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+    ac = new Ctx();
+    master = ac.createGain(); master.gain.value = 0.8; master.connect(ac.destination);
+    roofBus = ac.createGain(); roofBus.gain.value = 1; roofBus.connect(master);
+    clickBuf = ac.createBuffer(1, Math.round(ac.sampleRate * 0.004), ac.sampleRate);
+    var cd = clickBuf.getChannelData(0);
+    for (var n = 0; n < cd.length; n++) cd[n] = (Math.random() * 2 - 1) * Math.exp(-n / (ac.sampleRate * 0.0006));
+    windGain = loopNoise('lowpass', 420, 0.4, 0.2).g;
+    var br = loopNoise('bandpass', 900, 0.8, 0); breathGain = br.g; breathFilter = br.f;
+  }
+  function duck(on){ if (ac) roofBus.gain.setTargetAtTime(on ? 0.25 : 1, ac.currentTime, 0.1); }
+  function geiger(rate, dt){
+    var expected = Math.min(rate / 12, 170) * dt;
+    var count = Math.floor(expected) + (Math.random() < expected % 1 ? 1 : 0);
+    for (var c = 0; c < count; c++) {
+      var s = ac.createBufferSource(); s.buffer = clickBuf;
+      var g = ac.createGain(); g.gain.value = 0.3 + Math.random() * 0.3;
+      s.connect(g); g.connect(roofBus); s.start(ac.currentTime + Math.random() * dt);
+    }
+  }
+  function tone(freq, start, dur, vol, type){
+    var o = ac.createOscillator(); o.type = type || 'sine'; o.frequency.value = freq;
+    var g = ac.createGain(); g.gain.setValueAtTime(0, start); g.gain.linearRampToValueAtTime(vol, start + 0.02); g.gain.setValueAtTime(vol, start + dur - 0.05); g.gain.linearRampToValueAtTime(0, start + dur);
+    o.connect(g); g.connect(master); o.start(start); o.stop(start + dur + 0.02); return o;
+  }
+  function whistle(count){
+    if (!ac) return; var t0 = ac.currentTime + 0.02;
+    for (var k = 0; k < count; k++) { var o = tone(2650, t0, 0.38, 0.11); var l = ac.createOscillator(); l.frequency.value = 28; var lg = ac.createGain(); lg.gain.value = 90; l.connect(lg); lg.connect(o.frequency); l.start(t0); l.stop(t0 + 0.4); t0 += 0.5; }
+  }
+  function radioCrackle(dur){
+    if (!ac) return;
+    var src = ac.createBufferSource(); src.buffer = noiseBuffer(1);
+    var bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1900; bp.Q.value = 1.4;
+    var g = ac.createGain(), t = ac.currentTime; g.gain.setValueAtTime(0.15, t); g.gain.exponentialRampToValueAtTime(0.01, t + dur);
+    src.connect(bp); bp.connect(g); g.connect(master); src.start(t); src.stop(t + dur + 0.05);
+  }
+  function ring(){ if (!ac) return; var t = ac.currentTime + 0.02; for (var k = 0; k < 2; k++) { tone(440, t, 0.35, 0.05, 'square'); t += 0.5; } }
+  function breathEnv(T){
+    var p = (T % 4.2) / 4.2;
+    if (p < 0.38) return { v: Math.sin(p / 0.38 * Math.PI) * 0.6, ex: 0 };
+    if (p > 0.45 && p < 0.95) { var e = Math.sin((p - 0.45) / 0.5 * Math.PI); return { v: e, ex: e }; }
+    return { v: 0, ex: 0 };
+  }
+
+  // ---------- 3D roof ----------
+  var renderer = null;
+  if (window.THREE) { try { renderer = new THREE.WebGLRenderer({ canvas: $('gl'), antialias: true }); } catch (e) { renderer = null; } }
+  if (!renderer) { setStatus('这台设备无法运行 WebGL，看不到效果图。下面的玩法说明不受影响。'); $('startCard').hidden = true; return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  var seed = 1986;
+  function rnd(){ seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+
+  var SKY = 0x9a9d93;
+  var scene = new THREE.Scene(); scene.background = new THREE.Color(SKY); scene.fog = new THREE.FogExp2(SKY, 0.022);
+  var camera = new THREE.PerspectiveCamera(70, 16 / 9, 0.05, 400); camera.rotation.order = 'YXZ'; scene.add(camera);
+  scene.add(new THREE.HemisphereLight(0xc4c7bb, 0x2a2b26, 0.95));
+  var sun = new THREE.DirectionalLight(0xebe4d2, 0.55); sun.position.set(20, 40, 12); scene.add(sun);
+  function canvasTex(w, h, draw){ var c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); return new THREE.CanvasTexture(c); }
+  var roofTex = canvasTex(512, 512, function(g){
+    g.fillStyle = '#6b6d66'; g.fillRect(0, 0, 512, 512);
+    for (var i = 0; i < 9000; i++) { var v = 85 + rnd() * 65 | 0; g.fillStyle = 'rgba(' + v + ',' + v + ',' + (v - 6) + ',.28)'; g.fillRect(rnd() * 512, rnd() * 512, 1 + rnd() * 3, 1 + rnd() * 3); }
+    for (i = 0; i < 28; i++) { g.fillStyle = 'rgba(20,20,18,' + (0.12 + rnd() * 0.25) + ')'; g.beginPath(); g.ellipse(rnd() * 512, rnd() * 512, 10 + rnd() * 60, 6 + rnd() * 30, rnd() * 3, 0, 7); g.fill(); }
+    g.strokeStyle = 'rgba(28,28,26,.5)'; g.lineWidth = 2;
+    for (i = 0; i <= 512; i += 128) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 512); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(512, i); g.stroke(); }
+  });
+  roofTex.wrapS = roofTex.wrapT = THREE.RepeatWrapping; roofTex.repeat.set(10, 7);
+  var roofMesh = new THREE.Mesh(new THREE.PlaneGeometry(60, 40), new THREE.MeshStandardMaterial({ map: roofTex, roughness: 1 }));
+  roofMesh.rotation.x = -Math.PI / 2; roofMesh.position.set(0, 0, 8); scene.add(roofMesh);
+  var concrete = new THREE.MeshStandardMaterial({ color: 0x7a7c74, roughness: 1 });
+  var concreteDark = new THREE.MeshStandardMaterial({ color: 0x3b3d38, roughness: 1 });
+  var soot = new THREE.MeshStandardMaterial({ color: 0x232421, roughness: 1 });
+  var steel = new THREE.MeshStandardMaterial({ color: 0x4a4b47, roughness: .7, metalness: .3 });
+  var rust = new THREE.MeshStandardMaterial({ color: 0x6a3a2a, roughness: .8, metalness: .2 });
+  function box(w, h, d, mat, x, y, z, parent){ var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); (parent || scene).add(m); return m; }
+  var i;
+  box(0.4, 0.9, 40, concrete, -30, 0.45, 8); box(0.4, 0.9, 40, concrete, 30, 0.45, 8);
+  box(60, 1.4, 0.6, concreteDark, 0, -0.7, -12.1);
+  [[-26, 7], [-15, 4], [-6.5, 2.5], [9, 3], [19, 6]].forEach(function(s){ var p = box(s[1], 0.9, 0.4, concrete, s[0], 0.45, -12); p.rotation.z = (rnd() - .5) * .08; });
+  // ruined reactor hall beyond the north edge
+  box(44, 1, 32, soot, 0, -15, -28);
+  box(1.6, 22, 30, concreteDark, -20, -4, -27);
+  for (i = 0; i < 7; i++) { var hh = 6 + rnd() * 16; box(1.6, hh, 4.2, concreteDark, 20, -15 + hh / 2, -14 - i * 4.2); }
+  box(40, 9, 1.6, concreteDark, 0, -10, -43);
+  for (i = 0; i < 26; i++) { var w = 1 + rnd() * 4, h = 4 + rnd() * 12; var m = box(w, h, 0.6 + rnd() * 1.2, rnd() < .5 ? soot : concreteDark, -17 + rnd() * 34, -15 + h / 2 - rnd() * 2, -15 - rnd() * 26); m.rotation.set((rnd() - .5) * .4, rnd() * 3, (rnd() - .5) * .5); }
+  for (i = 0; i < 18; i++) { var bm = box(0.35, 0.35, 6 + rnd() * 12, steel, -16 + rnd() * 32, -8 + rnd() * 7, -16 - rnd() * 20); bm.rotation.set((rnd() - .5) * 1.2, rnd() * 3, (rnd() - .5) * 1.2); }
+  // ventilation stack with lattice
+  var stripe = canvasTex(32, 512, function(g){ for (var b = 0; b < 10; b++) { g.fillStyle = b % 2 ? '#c9c8bf' : '#9b3a2c'; g.fillRect(0, b * 51.2, 32, 51.2); } });
+  var SX = -13, SZ = -4, SR = 4.4;
+  var stack = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.9, 75, 32, 1, true), new THREE.MeshStandardMaterial({ map: stripe, roughness: .95, side: THREE.DoubleSide }));
+  stack.position.set(SX, 37.5, SZ); scene.add(stack);
+  [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(function(c){ box(0.35, 72, 0.35, rust, SX + c[0] * SR, 36, SZ + c[1] * SR); });
+  for (var yy = 8; yy < 72; yy += 9) { box(SR * 2, 0.22, 0.22, rust, SX, yy, SZ - SR); box(SR * 2, 0.22, 0.22, rust, SX, yy, SZ + SR); box(0.22, 0.22, SR * 2, rust, SX - SR, yy, SZ); box(0.22, 0.22, SR * 2, rust, SX + SR, yy, SZ); }
+  // pipe rack for Zone Natasha
+  var pipeMat = new THREE.MeshStandardMaterial({ color: 0x5b5a52, roughness: .6, metalness: .4 });
+  for (i = 0; i < 4; i++) { box(0.2, 1.6, 0.2, steel, 9 + i * 3, 0.8, 3); box(0.2, 1.6, 0.2, steel, 9 + i * 3, 0.8, 4.4); }
+  for (i = 0; i < 3; i++) { var p = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 11, 12), pipeMat); p.rotation.z = Math.PI / 2; p.position.set(13.5, 1.0 + i * 0.25, 3.3 + i * 0.4); scene.add(p); }
+  // rubble
+  var rubbleMats = [concrete, concreteDark, soot, steel];
+  for (i = 0; i < 170; i++) { var rx = -28 + rnd() * 56, rz = -11.5 + rnd() * 26; if (Math.hypot(rx - SX, rz - SZ) < SR + 1.2 || Math.abs(rx) < 2.5 && rz > 12) continue; var s = 0.08 + rnd() * 0.45; var r = box(s * (0.6 + rnd()), s * 0.6, s * (0.6 + rnd()), rubbleMats[rnd() * 4 | 0], rx, s * 0.25, rz); r.rotation.set(rnd() * .6, rnd() * 3, rnd() * .6); }
+
+  // stairwell head-house with the door the liquidator waits behind
+  var DOOR_Z = 16;
+  box(1.4, 3.2, 0.3, concreteDark, -1.3, 1.6, DOOR_Z);
+  box(1.4, 3.2, 0.3, concreteDark, 1.3, 1.6, DOOR_Z);
+  box(4, 0.9, 0.3, concreteDark, 0, 2.75, DOOR_Z);
+  box(8, 3.4, 0.3, concrete, -5.9, 1.7, DOOR_Z); box(8, 3.4, 0.3, concrete, 5.9, 1.7, DOOR_Z);
+  box(0.3, 3.4, 5, concreteDark, -2, 1.7, DOOR_Z + 2.5); box(0.3, 3.4, 5, concreteDark, 2, 1.7, DOOR_Z + 2.5);
+  box(4.3, 0.3, 5.3, concreteDark, 0, 3.35, DOOR_Z + 2.5); box(4.3, 3.4, 0.3, concreteDark, 0, 1.7, DOOR_Z + 5);
+  var lamp = new THREE.PointLight(0xffc77a, 0.7, 6); lamp.position.set(0, 3, DOOR_Z + 2.5); scene.add(lamp);
+  var doorPivot = new THREE.Group(); doorPivot.position.set(-0.6, 0, DOOR_Z); scene.add(doorPivot);
+  var door = box(1.2, 2.3, 0.08, rust, 0.6, 1.15, 0, doorPivot);
+  var doorTarget = 0;
+
+  // graphite, yellow outlines, chalk circles: rebuilt each day
+  var dayGroup = new THREE.Group(); scene.add(dayGroup);
+  var graphiteGeo = new THREE.BoxGeometry(0.3, 0.3, 0.62);
+  var lineMat = new THREE.LineBasicMaterial({ color: 0xe2b03a });
+  var chalkMat = new THREE.MeshBasicMaterial({ color: 0xf2f0e6, transparent: true, opacity: .75, side: THREE.DoubleSide, depthWrite: false });
+  var blocks = [];
+  function buildDay(cfg){
+    while (dayGroup.children.length) dayGroup.remove(dayGroup.children[0]);
+    blocks = [];
+    seed = 4000 + cfg.day * 131;
+    var area = cfg.zone === 'K' ? [-7, 7, -10.5, 1] : [-16, 16, -11, 7];
+    var tries = 0;
+    while (blocks.length < cfg.quota && tries++ < 800) {
+      var x = area[0] + rnd() * (area[1] - area[0]), z = area[2] + rnd() * (area[3] - area[2]);
+      if (Math.hypot(x - SX, z - SZ) < SR + 1.4 || (x > 8 && x < 20 && z > 2 && z < 5.2)) continue;
+      if (blocks.some(function(b){ return Math.hypot(b.position.x - x, b.position.z - z) < 1.8; })) continue;
+      var g = new THREE.Mesh(graphiteGeo, new THREE.MeshStandardMaterial({ color: 0x1f201f, roughness: .85 }));
+      var sc = rnd() < .3 ? 0.75 : 1; g.scale.set(sc, sc, sc);
+      g.position.set(x, 0.15 * sc, z); g.rotation.set((rnd() - .5) * .3, rnd() * 3, (rnd() - .5) * .3);
+      var o = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-.55, 0, -.55), new THREE.Vector3(.55, 0, -.55), new THREE.Vector3(.55, 0, .55), new THREE.Vector3(-.55, 0, .55)]), lineMat);
+      o.position.set(x, 0.02, z); o.rotation.y = g.rotation.y;
+      g.userData.outline = o;
+      dayGroup.add(g); dayGroup.add(o); blocks.push(g);
+    }
+    if (cfg.scouted) {
+      [[-6, -6], [4, -8], [11, -2]].forEach(function(p){
+        var c = new THREE.Mesh(new THREE.RingGeometry(1.1, 1.22, 48), chalkMat);
+        c.rotation.x = -Math.PI / 2; c.position.set(p[0], 0.025, p[1]); dayGroup.add(c);
+      });
+    }
+  }
+  var target = new THREE.Mesh(new THREE.BoxGeometry(38, 15, 30), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+  target.position.set(0, -6.5, -27.5); scene.add(target);
+  var puffTex = canvasTex(128, 128, function(g){ var gr = g.createRadialGradient(64, 64, 4, 64, 64, 64); gr.addColorStop(0, 'rgba(205,205,195,.6)'); gr.addColorStop(1, 'rgba(205,205,195,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); });
+  var smoke = [];
+  for (i = 0; i < 34; i++) { var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: puffTex, color: 0x8c8e87, transparent: true, depthWrite: false, opacity: 0 })); sp.userData = { life: rnd(), x: -8 + rnd() * 16, z: -20 - rnd() * 14, drift: (rnd() - .5) * 6 }; scene.add(sp); smoke.push(sp); }
+  // shovel in view
+  var shovel = new THREE.Group(); camera.add(shovel);
+  shovel.position.set(0.36, -0.42, -0.72); shovel.rotation.set(-0.38, 0.22, 0.08);
+  var handle = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 1.0, 8), new THREE.MeshStandardMaterial({ color: 0x5a4632, roughness: .9 }));
+  handle.rotation.x = Math.PI / 2; handle.position.z = 0.32; shovel.add(handle);
+  var blade = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.015, 0.3), steel); blade.position.z = -0.2; shovel.add(blade);
+
+  // gauge (ui/helmet/dose_gauge.gd look)
+  var gauge = $('gauge'), NS = 'http://www.w3.org/2000/svg';
+  function gp(a, rr){ var t = a * Math.PI / 180; return [60 + rr * Math.sin(t), 64 - rr * Math.cos(t)]; }
+  function gel(tag, at){ var e = document.createElementNS(NS, tag); for (var k in at) e.setAttribute(k, at[k]); gauge.appendChild(e); return e; }
+  gel('path', { d: 'M' + gp(-60, 48) + ' A48 48 0 0 1 ' + gp(60, 48), fill: 'none', stroke: 'rgba(223,226,212,.55)', 'stroke-width': 1.5 });
+  gel('path', { d: 'M' + gp(30, 48) + ' A48 48 0 0 1 ' + gp(60, 48), fill: 'none', stroke: '#c9452f', 'stroke-width': 3 });
+  ['1', '10', '100', '1k', '10k'].forEach(function(l, k){ var a = -60 + k * 30, p1 = gp(a, 48), p2 = gp(a, 41), pl = gp(a, 32); gel('line', { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1], stroke: 'rgba(223,226,212,.75)', 'stroke-width': 1.5 }); gel('text', { x: pl[0], y: pl[1] + 3, 'text-anchor': 'middle', 'font-size': 8, fill: 'rgba(223,226,212,.75)', 'font-family': 'Share Tech Mono, monospace' }).textContent = l; });
+  var needle = gel('line', { x1: 60, y1: 64, x2: 60, y2: 20, stroke: '#e2b03a', 'stroke-width': 2, 'stroke-linecap': 'round' });
+  gel('circle', { cx: 60, cy: 64, r: 3.5, fill: '#e2b03a' });
+
+  // ---------- roof logic (roof/roof.gd + player/roof_player.gd) ----------
+  var START = { x: 0, z: DOOR_Z + 2.2 };
+  var player = { x: START.x, z: START.z, yaw: 0, pitch: -0.05 };
+  var keys = {};
+  var R = {
+    running: false, paused: false, elapsed: 0, dose: 0, rph: 0, cleared: 0, total: 0, carrying: null, held: 0,
+    longSent: false, whistled: false, radioSent: false, thirtySent: false, nearSent: -99, resolve: null,
+    prepare: function(cfg){
+      this.running = false; this.paused = false; this.elapsed = 0; this.dose = 0; this.rph = 0; this.cleared = 0; this.total = cfg.quota;
+      if (this.carrying) { shovel.remove(this.carrying); this.carrying = null; }
+      buildDay(cfg); applyLook();
+      player.x = START.x; player.z = START.z; player.yaw = 0; player.pitch = -0.05;
+      doorTarget = 0; stage.classList.remove('onshift'); updateHint();
+    },
+    start: function(){
+      var c = GS.config;
+      this.running = true; this.paused = false; this.elapsed = 0; this.dose = 0; this.held = 0;
+      this.longSent = false; this.whistled = false; this.radioSent = false; this.thirtySent = false; this.firstPicked = false; this.nearSent = -99; doseHighArmed = true;
+      this.rph = this.ambient(); doorTarget = 1; stage.classList.add('onshift');
+      requestBark('shift_started', false, 25); requestBark('shift_started', true, 25);
+      if (c.heavy_lead) requestBark('heavy_lead', false, 25);
+      if (c.lead_visor) requestBark('lead_visor', false, 25);
+      if (!c.dosimeter_issued) requestBark('dosimeter_withheld', false, 25);
+      setStatus('第 ' + c.day + ' 天 · 屋顶。' + (touch ? '左下 WASD 走动，拖动画面转头，右下按钮铲起 / 扔下。' : '点画面锁定鼠标，WASD 走动。'));
+    },
+    ambient: function(){ return GS.config.base_rph * (GS.config.heavy_lead ? 0.7 : 1); },
+    setPaused: function(p){ this.paused = p; },
+    recall: function(){ this.finish(true); },
+    finish: function(recalled){
+      if (!this.running) return;
+      this.running = false; whistle(2);
+      if (this.carrying) { shovel.remove(this.carrying); this.carrying = null; }
+      var over = this.dose >= DOSE_LIMIT - 1e-6;
+      requestBark(over ? 'shift_ended_overdose' : recalled ? 'shift_ended_recalled' : 'shift_ended_time', false, 4);
+      var res = { cleared: this.cleared, total: this.total, dose_rem: Math.min(this.dose, DOSE_LIMIT), seconds_on_roof: this.elapsed, recalled_early: !!recalled, over_limit: over };
+      var self = this;
+      if (document.pointerLockElement) document.exitPointerLock();
+      setTimeout(function(){
+        $('blink').classList.add('on');
+        setTimeout(function(){ player.x = START.x; player.z = START.z; player.yaw = 0; player.pitch = -0.05; doorTarget = 0; stage.classList.remove('onshift'); $('blink').classList.remove('on'); }, 450);
+      }, 1800);
+      if (this.resolve) { var r = this.resolve; this.resolve = null; r(res); }
+    },
+    ended: function(){ var self = this; return track(function(done){ self.resolve = done; }); },
+    advance: function(dt){
+      var c = GS.config;
+      this.elapsed += dt;
+      this.dose += this.rph * dt / 3600;
+      if (this.carrying) { this.held += dt; if (!this.longSent && this.held >= 5) { this.longSent = true; requestBark('carrying_long', false); requestBark('carrying_long', true); } }
+      if (!this.thirtySent && this.elapsed >= c.shift_seconds - 30) { this.thirtySent = true; requestBark('thirty_seconds_left', true, 3); }
+      if (!this.whistled && this.elapsed >= c.shift_seconds - 10) { this.whistled = true; whistle(1); requestBark('whistle_warning', false, 3); requestBark('whistle_warning', true, 3); }
+      if (!this.radioSent && this.elapsed >= c.shift_seconds * 0.4) { this.radioSent = true; radioEvent(); }
+      if (this.rph >= 1000 && doseHighArmed) { doseHighArmed = false; requestBark('dose_high', false); }
+      if (this.rph < 800) doseHighArmed = true;
+      if (this.elapsed >= c.shift_seconds || this.dose >= DOSE_LIMIT) { this.dose = Math.min(this.dose, DOSE_LIMIT); this.finish(false); }
+    }
+  };
+
+  function applyLook(){
+    var c = GS.config; if (!c) return;
+    stage.classList.toggle('lead', !!c.lead_visor);
+    stage.classList.toggle('withheld', !c.dosimeter_issued);
+    $('hZone').textContent = 'BLOCK 3 ROOF · ' + zoneLabel(c.zone);
+    $('hCrew').textContent = 'LIQUIDATOR №' + pad3(c.liquidator_no) + ' · SHIFT ' + c.day;
+    $('hTotal').textContent = '/ ' + mmss(c.shift_seconds) + ' · WHISTLE AT ' + mmss(c.shift_seconds - 10);
+  }
+
+  var ray = new THREE.Raycaster(), center = new THREE.Vector2(0, 0), hintText = '', actReady = false, actCarry = false;
+  function updateHint(){
+    var t = '', ready = false;
+    if (R.running && !R.paused) {
+      if (!locked && !dragMode) t = '点击画面锁定鼠标 · CLICK TO LOOK';
+      else {
+        ray.setFromCamera(center, camera);
+        if (!R.carrying) {
+          var h = ray.intersectObjects(blocks)[0];
+          ready = !!(h && h.distance <= 2.0);
+          t = ready ? (touch ? '点「铲」铲起' : '左键铲起 / LMB') : (touch ? 'WASD 走动 · 拖动画面转头' : 'WASD · 移动    鼠标 · 转头');
+        } else {
+          ready = !!(player.z <= -9 && ray.intersectObject(target)[0]);
+          t = ready ? (touch ? '点「扔」扔下' : '左键扔下 / LMB') : '走到破口边缘再扔下';
+        }
+      }
+    }
+    if (t !== hintText) { hintText = t; $('hint').textContent = t; }
+    // the shovel button lights up when a tap would do something, and its label follows the shovel
+    if (touch && ready !== actReady) { actReady = ready; actBtn.classList.toggle('ready', ready); }
+    if (touch && !!R.carrying !== actCarry) { actCarry = !!R.carrying; $('actK').textContent = actCarry ? '扔' : '铲'; $('actL').textContent = actCarry ? 'THROW' : 'SHOVEL'; }
+  }
+  function act(){
+    if (!R.running || R.paused) return;
+    ray.setFromCamera(center, camera);
+    if (!R.carrying) {
+      var h = ray.intersectObjects(blocks)[0];
+      if (!h || h.distance > 2.0) return;
+      var g = h.object;
+      blocks.splice(blocks.indexOf(g), 1);
+      dayGroup.remove(g); dayGroup.remove(g.userData.outline);
+      shovel.add(g); g.position.set(0, 0.06, -0.2); g.rotation.set(0, 0.15, 0);
+      R.carrying = g; R.held = 0; R.longSent = false;
+      R.rph = R.ambient() + 900;
+      if (!R.firstPicked) { R.firstPicked = true; requestBark('first_block_picked', false); }
+    } else {
+      if (player.z > -9) return;
+      var t = ray.intersectObject(target)[0]; if (!t) return;
+      var b = R.carrying; R.carrying = null;
+      scene.attach(b);
+      flights.push({ m: b, p0: b.position.clone(), p1: t.point.clone(), t: 0 });
+      R.cleared++; R.rph = R.ambient();
+      requestBark('block_thrown', false); requestBark('block_thrown', true);
+    }
+  }
+  var flights = [];
+
+  // radio event (command/day_flow.gd _on_radio_event_due)
+  async function radioEvent(){
+    var ev = DATA.days[GS.config.day].radio_event;
+    if (!ev || !R.running) return;
+    try {
+      await say(ev.prompt || []);
+      if (!R.running) return;
+      var connected = await promptConnect(5, true);
+      if (!R.running) return;
+      var pull;
+      if (connected) {
+        await openOverlay(header(GS.config), 'LINE OPEN · ROOF → FIELD HQ');
+        var shown = (ev.prompt || []).filter(function(l){ return passes(l.condition); });
+        $('oSpk').textContent = SPEAKER.koval + ' · RADIO';
+        $('oText').textContent = shown.map(function(l){ return '“' + l.text + '”'; }).join(' ');
+        $('oZh').textContent = GS.showZh ? shown.map(function(l){ return l.zh || ''; }).join(' ') : '';
+        var o = await choose(RADIO_OPTIONS);
+        pull = o.answer === 'pull';
+        await playLines(ev[o.answer] || []);
+        await closeOverlay();
+      } else {
+        var th = GS.config.recall_threshold_rph;
+        pull = th > 0 && (ev.spike_rph || 0) >= th;
+        await say(ev.timeout || []);
+      }
+      if (pull && R.running) R.recall();
+    } catch (e) { if (e !== CANCEL) throw e; }
+  }
+
+  // ---------- campaign (command/day_flow.gd) ----------
+  async function runDay(){
+    var cfg = GS.config, d = DATA.days[cfg.day];
+    R.prepare(cfg);
+    setStatus('第 ' + cfg.day + ' 天 · 楼梯间。Koval 打电话进来。');
+    ring();
+    await say([DATA.calls[cfg.day + '/pre_shift']]);
+    await promptConnect(0, false);
+    await openOverlay(header(cfg));
+    setStatus('第 ' + cfg.day + ' 天 · 指挥部。点击或空格继续，1 2 3 选择。');
+    if (d.hq && d.hq.length) await runNodes(d.hq, d.hq[0].id);
+    await closeOverlay();
+    setStatus('第 ' + cfg.day + ' 天 · 门口交代。');
+    await say(d.briefing || []);
+    var ended = R.ended();
+    R.start();
+    var result = await ended;
+    cancelConnect();
+    await barksIdle();
+    await wait(1.2);
+    GS.results.push(result);
+    var outcome = classify(result), ctx = { dose: result.dose_rem.toFixed(1) };
+    setStatus('第 ' + cfg.day + ' 天 · 汇报（' + { good: '好', poor: '差', overdose: '超限', recalled: '被撤回' }[outcome] + '）。');
+    ring();
+    await say([DATA.calls[cfg.day + '/debrief']], ctx);
+    await promptConnect(0, false);
+    await openOverlay(header(cfg));
+    showStats(resultLine(cfg, result));
+    await playLines((d.debrief || {})[outcome] || [], ctx);
+    await closeOverlay();
+  }
+  async function ending(){
+    setStatus('结局。');
+    await openOverlay('FIELD HQ · 01 OCT 1986', 'LINE OPEN · FIELD HQ');
+    var rows = GS.results.map(function(r, k){ return 'DAY ' + (k + 1) + ' · ' + resultLine(GS.configs[k], r); });
+    rows.push('ROOF ' + (deadlineMet() ? 'CLEARED BY THE DEADLINE' : 'NOT CLEARED BY THE DEADLINE'));
+    showStats(rows.join('\n'));
+    var key = (deadlineMet() ? 'met' : 'missed') + '_' + (truthTold() ? 'truth' : 'withheld');
+    await playLines([].concat(DATA.ending[key] || [], DATA.ending.epilogue || []));
+    await closeOverlay();
+    $('endText').textContent = '结局（' + { met_truth: '清完 · 说实话', met_withheld: '清完 · 隐瞒', missed_truth: '没清完 · 说实话', missed_withheld: '没清完 · 隐瞒' }[key] + '）和史实字幕已播完。成品会在这里接鸣谢画面，然后按任意键退出。';
+    $('endCard').hidden = false;
+    setStatus('演示结束。');
+  }
+  async function campaign(fromDay){
+    try {
+      for (var day = fromDay; day <= DAYS; day++) {
+        GS.day = day; GS.config = newConfig(day); GS.configs[day - 1] = GS.config;
+        applyLook();
+        await runDay();
+      }
+      await ending();
+    } catch (e) { if (e !== CANCEL) { console.error(e); setStatus('出错了：' + (e && e.message)); } }
+  }
+  function reset(){
+    gen++;
+    cancelAll(); cancelConnect();
+    if (R.running) { R.running = false; }
+    if (R.carrying) { shovel.remove(R.carrying); R.carrying = null; }
+    flights.forEach(function(f){ scene.remove(f.m); }); flights = [];
+    barkQueue = []; selfEl.classList.remove('on'); subEl.classList.remove('on'); sayBusy = false;
+    stage.classList.remove('ovl-open', 'onshift'); ovlOpen = false; typing = null; advanceFn = null; choiceFn = null;
+    connectEl.hidden = true; connectState = null; duck(false);
+    $('endCard').hidden = true; $('startCard').hidden = true;
+    GS.configs = []; GS.results = [];
+  }
+  function startFrom(day){
+    if (touch) enterPlay();
+    reset(); initAudio(); engaged = true;
+    try { stage.focus({ preventScroll: true }); } catch (e) {}
+    if (day === 2) {
+      // a stand-in Day 1 so Day 2's branches have something to read
+      var c1 = newConfig(1); c1.heavy_lead = false; c1.recall_threshold_rph = 1000;
+      GS.configs[0] = c1; GS.results.push({ cleared: 6, total: 6, dose_rem: 18.6, seconds_on_roof: 90, recalled_early: false, over_limit: false });
+    }
+    campaign(day);
+  }
+  $('startBtn').addEventListener('click', function(e){ e.stopPropagation(); startFrom(1); });
+  $('againBtn').addEventListener('click', function(e){ e.stopPropagation(); startFrom(1); });
+  $('restartBtn').addEventListener('click', function(){ startFrom(1); });
+  $('day2Btn').addEventListener('click', function(){ startFrom(2); });
+  $('zhToggle').addEventListener('change', function(){ GS.showZh = this.checked; });
+
+  // ---------- input ----------
+  var locked = false, canLock = !!stage.requestPointerLock, dragMode = !canLock, engaged = false, drag = null;
+  function tryLock(){
+    if (!canLock) { dragMode = true; return; }
+    try { var p = stage.requestPointerLock(); if (p && p.catch) p.catch(function(){ canLock = false; dragMode = true; }); } catch (e) { canLock = false; dragMode = true; }
+  }
+  document.addEventListener('pointerlockchange', function(){ locked = document.pointerLockElement === stage; if (locked) engaged = true; });
+  document.addEventListener('pointerlockerror', function(){ canLock = false; dragMode = true; });
+  document.addEventListener('pointerdown', function(e){ engaged = stage.contains(e.target); });
+  stage.addEventListener('mousemove', function(e){
+    if (!locked || !R.running || R.paused) return;
+    player.yaw -= e.movementX * 0.0022; player.pitch = Math.max(-1.2, Math.min(1.0, player.pitch - e.movementY * 0.0022));
+  });
+  var gl = $('gl');
+  stage.addEventListener('pointerdown', function(e){
+    if (e.target.closest('button, .ovl, .card, .connect')) return;
+    if (locked) { if (e.button === 0) act(); return; }
+    drag = { x: e.clientX, y: e.clientY, moved: 0, id: e.pointerId };
+  });
+  stage.addEventListener('pointermove', function(e){
+    if (!drag || locked || e.pointerId !== drag.id) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy);
+    if (drag.moved > 4) { try { stage.setPointerCapture(drag.id); } catch (_) {} }
+    if (R.running && !R.paused) { player.yaw -= dx * 0.005; player.pitch = Math.max(-1.2, Math.min(1.0, player.pitch - dy * 0.005)); }
+  });
+  stage.addEventListener('pointerup', function(e){
+    if (!drag || e.pointerId !== drag.id) return;
+    var click = drag.moved < 6; drag = null;
+    if (click && !R.running && sayAdvance) { sayAdvance(); return; }
+    if (!click || !R.running || R.paused) return;
+    if (!dragMode && canLock && e.pointerType === 'mouse') tryLock(); else act();
+  });
+  stage.addEventListener('pointercancel', function(e){ if (drag && e.pointerId === drag.id) drag = null; });
+
+  // ---------- touch: WASD pad, shovel button, full-screen play ----------
+  var touch = false, playing = false, pad = { w: false, a: false, s: false, d: false }, padTouches = {};
+  var padEl = $('pad'), actBtn = $('actBtn');
+  function useTouch(){
+    if (touch) return;
+    touch = true; dragMode = true;
+    stage.classList.add('touch');
+    $('startKeys').textContent = '拖动画面 转头 · 左下 WASD 走动 · 右下按钮 铲起 / 扔下';
+    $('oHint').textContent = 'TAP TO CONTINUE · 点击屏幕继续';
+    $('introGo').textContent = '点击继续 · TAP TO CONTINUE';
+    $('playBtn').hidden = false;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5)); resize();
+  }
+  // a touch anywhere switches the controls over, even where the browser reported a fine pointer
+  document.addEventListener('pointerdown', function(e){ if (e.pointerType === 'touch') useTouch(); }, true);
+
+  // each finger on the pad holds the key under it, so sliding from W to D works and two fingers give a diagonal
+  function padKey(x, y){ var el = document.elementFromPoint(x, y), b = el && el.closest ? el.closest('#pad button') : null; return b ? b.getAttribute('data-k') : null; }
+  function padSync(){
+    var on = {};
+    for (var id in padTouches) if (padTouches[id]) on[padTouches[id]] = true;
+    for (var k in pad) { pad[k] = !!on[k]; padEl.querySelector('[data-k="' + k + '"]').classList.toggle('on', pad[k]); }
+  }
+  function padClear(){ padTouches = {}; padSync(); }
+  padEl.addEventListener('pointerdown', function(e){
+    e.preventDefault(); e.stopPropagation();
+    try { padEl.setPointerCapture(e.pointerId); } catch (_) {}
+    padTouches[e.pointerId] = padKey(e.clientX, e.clientY); padSync();
+  });
+  padEl.addEventListener('pointermove', function(e){
+    if (!(e.pointerId in padTouches)) return;
+    e.stopPropagation();
+    var k = padKey(e.clientX, e.clientY);
+    if (k !== padTouches[e.pointerId]) { padTouches[e.pointerId] = k; padSync(); }
+  });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function(t){
+    padEl.addEventListener(t, function(e){ e.stopPropagation(); if (e.pointerId in padTouches) { delete padTouches[e.pointerId]; padSync(); } });
+  });
+  padEl.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+
+  actBtn.addEventListener('pointerdown', function(e){ e.preventDefault(); e.stopPropagation(); actBtn.classList.add('down'); act(); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function(t){ actBtn.addEventListener(t, function(e){ e.stopPropagation(); actBtn.classList.remove('down'); }); });
+  actBtn.addEventListener('click', function(e){ e.stopPropagation(); if (e.detail === 0) act(); });
+  actBtn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+
+  // the stage covers the screen; real fullscreen and a landscape lock are extras where the browser allows them
+  function enterPlay(){
+    if (!touch || playing) return;
+    playing = true;
+    stage.classList.add('play'); document.documentElement.classList.add('playing');
+    var req = stage.requestFullscreen || stage.webkitRequestFullscreen;
+    try {
+      var p = req && req.call(stage, { navigationUI: 'hide' });
+      if (p && p.then) p.then(lockLandscape, function(){}); else if (req) setTimeout(lockLandscape, 300);
+    } catch (e) {}
+  }
+  function lockLandscape(){ try { var o = screen.orientation; if (o && o.lock) o.lock('landscape').catch(function(){}); } catch (e) {} }
+  function leavePlay(){
+    if (!playing) return;
+    playing = false; padClear();
+    stage.classList.remove('play'); document.documentElement.classList.remove('playing');
+    try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+    var fe = document.fullscreenElement || document.webkitFullscreenElement, ex = document.exitFullscreen || document.webkitExitFullscreen;
+    if (fe && ex) { try { var p = ex.call(document); if (p && p.catch) p.catch(function(){}); } catch (e) {} }
+  }
+  $('exitBtn').addEventListener('click', function(e){ e.stopPropagation(); leavePlay(); });
+  $('playBtn').addEventListener('click', function(){ enterPlay(); });
+  document.addEventListener('visibilitychange', function(){ if (document.hidden) padClear(); });
+  document.addEventListener('keydown', function(e){
+    if (!engaged || e.altKey || e.ctrlKey || e.metaKey) return;
+    var k = e.key.toLowerCase();
+    if (k === ' ' || k === 'enter') {
+      e.preventDefault();
+      if (connectState) { initAudio(); connectState.finish(true); return; }
+      if (ovlOpen) { advance(); return; }
+      if (sayAdvance) sayAdvance();
+      return;
+    }
+    if ('123'.indexOf(k) >= 0 && ovlOpen && choiceFn) { e.preventDefault(); choiceFn(k); return; }
+    if ('wasd'.indexOf(k) >= 0 || k.indexOf('arrow') === 0) { if (R.running) e.preventDefault(); keys[k] = true; }
+  });
+  document.addEventListener('keyup', function(e){ keys[e.key.toLowerCase()] = false; });
+  window.addEventListener('blur', function(){ keys = {}; padClear(); });
+
+  // ---------- frame loop ----------
+  var speck = $('speck'), sg = speck.getContext('2d'), fogEl = $('fog');
+  function resize(){
+    var w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    speck.width = Math.max(1, Math.round(w / 2)); speck.height = Math.max(1, Math.round(h / 2));
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
+  resize();
+  function drawSpeck(rph){
+    var sw = speck.width, sh = speck.height; sg.clearRect(0, 0, sw, sh);
+    var n = Math.round(rph / 18 * (GS.config && GS.config.lead_visor ? 0.35 : 1) * (ovlOpen ? 0.3 : 1) * (sw / 960));
+    for (var k = 0; k < n; k++) {
+      var x = Math.random() * sw, y = Math.random() * sh;
+      sg.fillStyle = 'rgba(255,255,248,' + (0.35 + Math.random() * 0.65).toFixed(2) + ')';
+      var s = Math.random() < 0.85 ? 1 : 2; sg.fillRect(x, y, s, s);
+      if (Math.random() < 0.04) sg.fillRect(x, y, 1, 3 + Math.random() * 7);
+    }
+  }
+  function updateHUD(){
+    var c = GS.config; if (!c) return;
+    var whistleAt = c.shift_seconds - 10;
+    $('hClock').textContent = mmss(Math.min(R.elapsed, c.shift_seconds));
+    $('hClock').classList.toggle('warn', R.elapsed >= whistleAt);
+    $('hCleared').textContent = 'CLEARED ' + R.cleared + ' / ' + R.total;
+    $('hShovel').textContent = R.carrying ? 'SHOVEL: 1 BLOCK GRAPHITE' : 'SHOVEL: EMPTY';
+    $('hRate').textContent = Math.round(R.rph) + ' Р/ч';
+    $('hRate').classList.toggle('hot', R.rph >= 1000);
+    $('hDose').textContent = 'DOSE ' + R.dose.toFixed(1) + ' / 25 REM';
+    var a = -60 + Math.max(0, Math.min(4, Math.log10(Math.max(1, R.rph)))) / 4 * 120;
+    needle.setAttribute('transform', 'rotate(' + a.toFixed(1) + ' 60 64)');
+    if (ovlOpen && R.running) $('oT').innerHTML = mmss(R.elapsed) + ' <small>/ ' + mmss(c.shift_seconds) + '</small>';
+  }
+  var last = performance.now(), doorAngle = 0;
+  function frame(now){
+    var dt = Math.min(0.1, (now - last) / 1000); last = now; clock += dt;
+    var live = R.running && !R.paused;
+    if (live) {
+      var c = GS.config;
+      var speed = 3 * (c.heavy_lead ? 0.67 : 1) * (R.carrying ? 0.85 : 1);
+      var f = (keys.w || keys.arrowup || pad.w ? 1 : 0) - (keys.s || keys.arrowdown || pad.s ? 1 : 0);
+      var st = (keys.d || keys.arrowright || pad.d ? 1 : 0) - (keys.a || keys.arrowleft || pad.a ? 1 : 0);
+      if (f || st) {
+        var len = Math.hypot(f, st); f /= len; st /= len;
+        var sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
+        var nx = player.x + (-sy * f + cy * st) * speed * dt, nz = player.z + (-cy * f - sy * st) * speed * dt;
+        // out through the doorway, never back into the stairwell
+        var inDoorway = player.z > DOOR_Z - 0.6;
+        if (inDoorway) nx = Math.max(-0.45, Math.min(0.45, nx));
+        nx = Math.max(-29, Math.min(29, nx));
+        nz = Math.max(-11.6, Math.min(inDoorway ? Math.min(player.z, START.z) : DOOR_Z - 0.6, nz));
+        if (Math.hypot(nx - SX, nz - SZ) < SR + 0.6) { var ang = Math.atan2(nz - SZ, nx - SX); nx = SX + Math.cos(ang) * (SR + 0.6); nz = SZ + Math.sin(ang) * (SR + 0.6); }
+        player.x = nx; player.z = nz;
+      }
+      R.advance(dt);
+      if (R.running && player.z <= -9 && clock - R.nearSent > 12) { R.nearSent = clock; requestBark('near_breach', false); }
+    }
+    if (connectState && connectState.timeout) {
+      var left = 1 - (performance.now() - connectState.start) / (connectState.timeout * 1000);
+      $('connectFill').style.width = Math.max(0, left * 100) + '%';
+      if (left <= 0) connectState.finish(false);
+    }
+    updateBarks();
+    updateHint();
+
+    // camera and sway (roof_player.gd: heavy 1.7, carrying 1.8)
+    var sway = (GS.config && GS.config.heavy_lead ? 1.7 : 1) * (R.carrying ? 1.8 : 1) * (reduced ? 0 : 1) * (live ? 1 : 0.4);
+    camera.position.set(player.x, 1.65 + Math.sin(clock * 3) * 0.008 * sway, player.z);
+    camera.rotation.set(player.pitch + Math.sin(clock * 1.5) * 0.004 * sway, player.yaw + Math.sin(clock * 0.7) * 0.003 * sway, Math.sin(clock * 1.1) * 0.006 * sway);
+    doorAngle += (doorTarget * -1.9 - doorAngle) * Math.min(1, dt * 3);
+    doorPivot.rotation.y = doorAngle;
+
+    smoke.forEach(function(sp){ var u = sp.userData; u.life += dt * 0.035; if (u.life > 1) u.life -= 1; sp.position.set(u.x + u.drift * u.life + Math.sin(clock * .3 + u.z) * 1.5, -9 + u.life * 48, u.z - u.life * 4); var sz = 6 + u.life * 24; sp.scale.set(sz, sz, 1); sp.material.opacity = Math.sin(u.life * Math.PI) * 0.5; });
+    for (var n = flights.length - 1; n >= 0; n--) {
+      var fl = flights[n]; fl.t += dt / 1.1; var p = Math.min(1, fl.t);
+      fl.m.position.lerpVectors(fl.p0, fl.p1, p); fl.m.position.y += Math.sin(p * Math.PI) * 1.6 - p * p * 4;
+      fl.m.rotation.x += dt * 6; fl.m.rotation.z += dt * 3;
+      if (fl.t >= 1) { scene.remove(fl.m); flights.splice(n, 1); }
+    }
+
+    var b = breathEnv(clock);
+    var frac = R.running ? Math.min(R.elapsed / GS.config.shift_seconds, 1) : 0;
+    fogEl.style.opacity = stage.classList.contains('onshift') ? ((0.25 + 0.75 * frac) * (reduced ? 0.6 : 0.45 + 0.55 * b.ex)).toFixed(3) : '0';
+    if (ac) {
+      if (live) geiger(R.rph, dt);
+      breathGain.gain.setTargetAtTime(live ? b.v * (b.ex ? 0.15 : 0.08) * (GS.config.heavy_lead ? 1.4 : 1) : 0, ac.currentTime, 0.05);
+      breathFilter.frequency.setTargetAtTime(b.ex ? 700 : 1400, ac.currentTime, 0.1);
+    }
+    drawSpeck(stage.classList.contains('onshift') ? R.rph : 120);
+    updateHUD();
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+
+  // local testing only (file: or the preview pane's data: URL), never on the published https page
+  if (location.protocol === 'file:' || location.protocol === 'data:') window.__roof = { player: player, R: R, GS: GS, act: act, blocks: function(){ return blocks; } };
+
+  // first frame: Day 1 stairwell behind the start card
+  GS.config = newConfig(1); GS.configs[0] = GS.config;
+  R.prepare(GS.config);
+  if (coarse) useTouch();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
