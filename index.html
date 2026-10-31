@@ -230,6 +230,8 @@ ul.plain{list-style:none;padding:0;margin:0;display:grid;gap:10px}
 ul.plain li{padding-left:18px;position:relative}
 ul.plain li::before{content:"";position:absolute;left:0;top:.72em;width:7px;height:7px;background:var(--amber)}
 .note{font-size:13px;color:var(--paper-dim);border-left:2px solid var(--line);padding-left:12px;margin-top:18px}
+ul.rules{margin-top:22px;max-width:70ch}
+td.k .chip{margin-top:4px}
 ol.loop{list-style:none;counter-reset:s;padding:0;margin:0;display:grid}
 ol.loop li{counter-increment:s;display:grid;grid-template-columns:44px minmax(0,1fr);gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
 ol.loop li::before{content:counter(s);font-family:var(--f-mono);font-size:26px;line-height:1.1;color:var(--amber)}
@@ -253,6 +255,9 @@ pre code{background:none;padding:0}
 footer{color:var(--paper-dim);font-size:13px;padding-block:26px 48px}
 @media (max-width:760px){
   .doc section{grid-template-columns:minmax(0,1fr);padding-block:28px}
+  table{min-width:0;font-size:13px}
+  th,td{padding-right:10px}
+  td.k{white-space:normal;min-width:5.5em}
   .grid2{grid-template-columns:minmax(0,1fr)}
   .stage{aspect-ratio:auto;height:min(78vh,560px)}
   .o-body{width:84%}
@@ -275,7 +280,7 @@ footer{color:var(--paper-dim);font-size:13px;padding-block:26px 48px}
   <div class="wrap top-in">
     <h1><span>90</span> SECONDS ON THE ROOF</h1>
     <span class="cn">屋顶九十秒</span>
-    <span class="meta">比赛版 · 两天 · 可交互效果图与玩法说明 v0.4</span>
+    <span class="meta">网页玩法模拟 · 可以直接玩</span>
   </div>
 </header>
 
@@ -348,7 +353,7 @@ footer{color:var(--paper-dim);font-size:13px;padding-block:26px 48px}
         <div>
           <h2><span>90</span> SECONDS<br>ON THE ROOF</h2>
           <div class="cn">屋顶九十秒</div>
-          <p>1986 年秋，切尔诺贝利。你同时是指挥部的上校和上屋顶的清理人员。这是比赛版的两天流程，台词直接取自游戏剧本。</p>
+          <p>1986 年秋，切尔诺贝利。你既是在指挥部下命令的上校，也是拿着铁锹上屋顶的清理人员。这里可以玩完整的两天，台词全部来自游戏剧本。</p>
           <div class="keys" id="startKeys">鼠标 转头 · WASD 走动 · 左键 铲起 / 扔下 · 空格 接通指挥部 · 1 2 3 选择</div>
           <button class="btn" type="button" id="startBtn">开始（开启声音）</button>
         </div>
@@ -363,7 +368,7 @@ footer{color:var(--paper-dim);font-size:13px;padding-block:26px 48px}
       <div>
         <h2>END OF DEMO</h2>
         <div class="cn">演示结束</div>
-        <p id="endText">结局和史实字幕已播完。成品会在这里接鸣谢画面，然后按任意键退出。</p>
+        <p id="endText">谢谢游玩。</p>
         <button class="btn" type="button" id="againBtn">从第 1 天重新开始</button>
       </div>
     </div>
@@ -382,163 +387,139 @@ footer{color:var(--paper-dim);font-size:13px;padding-block:26px 48px}
 <main class="doc wrap">
 
   <section>
-    <header><h2>一句话</h2><p>比赛版，2026-11-01 12:00 截止</p></header>
+    <header><h2>关于游戏</h2><p>1986 年，切尔诺贝利</p></header>
     <div class="body">
-      <p class="lead">1986 年秋，切尔诺贝利。你同时扮演两个人：在指挥部下命令的上校，和带着铁锹爬上 3 号机组屋顶的清理人员。指挥官的每个决定，都会在 90 秒后落到清理人员身上，也就是落到你自己身上。</p>
+      <p class="lead">1986 年秋天，切尔诺贝利核电站。爆炸抛出的石墨块散落在 3 号机组的屋顶上，机器人开上去就失灵，只能派士兵拿着铁锹上去，一块一块铲下来。</p>
+      <p>你同时扮演两个人：在指挥部下命令的上校，和拿着铁锹爬上屋顶的清理人员。上校做的每个决定，都会在接下来的 90 秒里落到屋顶上那个人身上，也就是落到你自己身上。</p>
       <p class="en-q">You give the orders. You take the dose.</p>
-      <p class="note">上面的效果图是游戏的网页复刻：流程、数值、选项和台词都和游戏一致，台词是从 <code>data/dialogue/</code> 的剧本文件直接拷进来的（工作区版本，基于提交 <code id="commitId">—</code>）。屋顶用几何体搭成，没有配音，只有程序合成的环境声。</p>
+      <p class="note">上面的画面是用网页做的玩法模拟，并非游戏实机画面。流程、数值、选择和台词都和游戏一致，但屋顶只用简单的几何体搭成，也没有配音。</p>
     </div>
   </section>
 
   <section>
-    <header><h2>角色</h2><p>全部虚构</p></header>
+    <header><h2>怎么玩</h2><p>电脑和手机都能玩</p></header>
     <div class="body wide">
       <div class="tbl"><table>
-        <thead><tr><th>角色</th><th>谁来操作</th><th>出现在哪里</th><th>比赛版配音</th></tr></thead>
+        <thead><tr><th>操作</th><th>电脑</th><th>手机</th></tr></thead>
         <tbody>
-          <tr><td class="k">指挥官（上校）</td><td>玩家</td><td>只有文字：叠在头盔画面上的半透明指挥官界面</td><td><span class="chip">只出文字</span></td></tr>
-          <tr><td class="k">清理人员 №214</td><td>玩家（第 1 天）</td><td>第一人称头盔视角；19 岁义务兵，紧张，会自言自语</td><td><span class="chip on">配音</span></td></tr>
-          <tr><td class="k">清理人员 №361</td><td>玩家（第 2 天）</td><td>38 岁预备役，两个孩子，冷幽默</td><td><span class="chip on">配音</span></td></tr>
-          <tr><td class="k">Sgt. Koval 小队负责人</td><td>NPC</td><td>楼梯间打电话进来；门口当面交代；屋顶上无线电喊话</td><td><span class="chip on">配音</span></td></tr>
-          <tr><td class="k">Orlova 剂量员</td><td>NPC</td><td>指挥官界面里报读数和剂量</td><td><span class="chip">只出文字</span></td></tr>
-          <tr><td class="k">Lebedev 政府委员会代表</td><td>NPC</td><td>指挥官界面里催工期</td><td><span class="chip">只出文字</span></td></tr>
+          <tr><td class="k">转头</td><td>先点一下画面，再移动鼠标</td><td>在画面上拖动</td></tr>
+          <tr><td class="k">走动</td><td>W A S D</td><td>按住左下角的 W A S D</td></tr>
+          <tr><td class="k">铲起 / 扔下</td><td>鼠标左键</td><td>点右下角的圆形按钮</td></tr>
+          <tr><td class="k">接通指挥部</td><td>点“接通”或按空格，在屋顶上只能按空格</td><td>点“接通”</td></tr>
+          <tr><td class="k">继续对话 / 做选择</td><td>点击或按空格；按 1 2 3 选择</td><td>点屏幕；点选项</td></tr>
         </tbody>
       </table></div>
-    </div>
-  </section>
-
-  <section>
-    <header><h2>一个画面，两层界面</h2><p>头盔视角是游戏唯一的画面</p></header>
-    <div class="body">
-      <p>指挥官界面不和头盔画面并排，而是一层盖满屏幕的半透明文字界面，透过它还能看到压暗的头盔画面。</p>
-      <ul class="plain">
-        <li><b>引入</b>：每次都由 Koval 的画外音开头，屏幕下方出现“接通指挥部”。在楼梯间可以点击或按空格；在屋顶上鼠标锁定用来转头，只能按空格。</li>
-        <li><b>打开期间</b>：头盔画面变暗、轻微模糊；屋顶声音压低但不停；计时和剂量暂停；转头、走动、铲石墨失效，鼠标解锁。</li>
-        <li><b>界面里</b>：角色名、打字机效果的台词和中文小字、选项（点击或按 1 / 2 / 3）。</li>
-        <li><b>关闭后</b>：界面淡出，声音恢复，鼠标重新锁定，计时继续。</li>
+      <ul class="plain rules">
+        <li>准星对准 2 米内的石墨块就能铲起来。端着它走到北边的破口边缘，对准破口扔下去。</li>
+        <li>每班只有 90 秒，第 80 秒吹哨，哨响就要往回跑。</li>
+        <li>铲着石墨时剂量率会猛涨，端得越久，吃的剂量越多。</li>
+        <li>累计剂量到 25 雷姆，这一班立刻结束。</li>
       </ul>
     </div>
   </section>
 
   <section>
-    <header><h2>一天的流程</h2><p>比赛版共两天</p></header>
-    <div class="body">
-      <ol class="loop">
-        <li><b>楼梯间 · 接通指挥部</b><span>头盔视角，清理人员站在通往屋顶的门口，计时还没开始。Koval 打电话进来，接通后在指挥官界面里听汇报、做决定。</span></li>
-        <li><b>门口交代</b><span>界面关闭，Koval 当面交代几句（内容随你的决定变化），然后门打开。</span></li>
-        <li><b>屋顶</b><span>WASD 走到石墨旁，左键铲起，走到北侧破口边缘扔下去。班次进行到 40% 时有一次无线电事件。</span></li>
-        <li><b>汇报</b><span>哨声后回到楼梯间。Koval 再打电话，界面里显示清除块数、剂量和停留秒数，以及按结果分支的汇报台词。</span></li>
-      </ol>
-    </div>
-  </section>
-
-  <section>
-    <header><h2>两天的决策</h2><p>效果图里全部生效</p></header>
+    <header><h2>人物</h2><p>都是虚构的</p></header>
     <div class="body wide">
       <div class="tbl"><table>
-        <thead><tr><th>天</th><th>决策</th><th>落到屋顶上的变化</th></tr></thead>
+        <thead><tr><th>人物</th><th>是谁</th><th>在哪里见到他</th></tr></thead>
         <tbody>
-          <tr><td class="k">第 1 天 · 卡佳</td><td>轻铅背心 / 重铅板</td><td>重：环境剂量率 ×0.7，走路速度 ×0.67，视角晃得更厉害；门口交代和自言自语跟着变</td></tr>
-          <tr><td class="k">第 1、2 天</td><td>常备命令：1000 / 2000 Р/ч 自动撤，或不自动撤</td><td>只在无线电事件 5 秒内没接通时生效</td></tr>
-          <tr><td class="k">第 2 天 · 娜塔莎</td><td>普通面罩 / 铅玻璃面罩</td><td>铅玻璃：面罩开口缩到 86%，画面变暗，胶片白点变少</td></tr>
-          <tr><td class="k">第 2 天</td><td>派剂量员侦察 / 不侦察</td><td>侦察：屋顶上用白粉笔圈出热点，代价是定额从 10 块变成 12 块</td></tr>
-          <tr><td class="k">第 2 天</td><td>发剂量计 / 收走剂量计</td><td>收走：右下角剂量表消失，只剩盖革声；同时决定结局走“说实话”还是“隐瞒”分支</td></tr>
+          <tr><td class="k">上校<br><span class="chip on">你</span></td><td>现场指挥部的指挥官</td><td>只在指挥部界面里出现，用文字下命令</td></tr>
+          <tr><td class="k">清理人员 №214<br><span class="chip on">你 · 第 1 天</span></td><td>19 岁的义务兵，很紧张，会小声自言自语</td><td>第一人称，透过他的头盔看屋顶</td></tr>
+          <tr><td class="k">清理人员 №361<br><span class="chip on">你 · 第 2 天</span></td><td>38 岁的预备役，拖拉机修理工，家里有两个孩子，说话带点冷幽默</td><td>第一人称，透过他的头盔看屋顶</td></tr>
+          <tr><td class="k">科瓦尔中士</td><td>小队长，负责把人送上屋顶</td><td>在楼梯间打电话给你，在门口当面交代，在屋顶上用无线电喊话</td></tr>
+          <tr><td class="k">剂量员奥尔洛娃</td><td>记录每个人吃了多少剂量</td><td>在指挥部里报读数</td></tr>
+          <tr><td class="k">委员会代表列别杰夫</td><td>政府委员会派来的人，只关心工期</td><td>在指挥部里催进度</td></tr>
         </tbody>
       </table></div>
     </div>
   </section>
 
   <section>
-    <header><h2>无线电事件</h2><p>时间不够时第一个砍</p></header>
+    <header><h2>两个身份，一个画面</h2><p>头盔视角是唯一的画面</p></header>
     <div class="body">
-      <p>班次进行到 40% 时，Koval 在无线电里喊读数飙升（第 1 天 1200 Р/ч，第 2 天 1600 Р/ч），屏幕下方出现“按空格接通”，计时还在走。</p>
+      <p>游戏只有一个画面：清理人员的头盔视角。指挥部不是另开的窗口，而是盖在头盔画面上的一层半透明界面，透过它还能看到屋顶。</p>
       <ul class="plain">
-        <li><b>5 秒内按空格</b>：打开指挥官界面，计时暂停，选 [1] 撤回来 或 [2] 继续干。</li>
-        <li><b>5 秒内没接通</b>：按常备命令执行。读数达到阈值就撤，阈值为 0 表示不撤。</li>
+        <li><b>电话响了。</b>科瓦尔打来电话，屏幕下方出现“接通指挥部”。</li>
+        <li><b>接通之后，</b>头盔画面变暗、变模糊，屋顶的声音压低，计时和剂量都停下来。你变回上校，听汇报，做决定。</li>
+        <li><b>挂断之后，</b>界面淡去，你回到头盔里，计时接着走。</li>
       </ul>
     </div>
   </section>
 
   <section>
-    <header><h2>屋顶操作与数值</h2><p>和 <code>roof/</code>、<code>player/</code> 一致</p></header>
+    <header><h2>你要做的决定</h2><p>每个选择都会落到屋顶上</p></header>
     <div class="body wide">
       <div class="tbl"><table>
-        <thead><tr><th>项目</th><th>数值</th><th>说明</th></tr></thead>
+        <thead><tr><th>什么时候</th><th>选什么</th><th>会怎样</th></tr></thead>
         <tbody>
-          <tr><td class="k">转头 / 走动</td><td>—</td><td>鼠标锁定后转头；W A S D 走动；开班前不能动</td></tr>
-          <tr><td class="k">铲起</td><td class="num">≤ 2 m</td><td>准星对准 2 米内的石墨，提示“左键铲起”</td></tr>
-          <tr><td class="k">扔下</td><td class="num">≤ 3 m</td><td>铲着石墨，走到北侧破口边缘 3 米内，准星对着破口</td></tr>
-          <tr><td class="k">环境剂量率</td><td class="num">卡佳 500 · 娜塔莎 700</td><td>Р/ч，游戏值</td></tr>
-          <tr><td class="k">铲着石墨</td><td class="num">+900 Р/ч</td><td>剂量表进红区（≥ 1000）会触发自言自语</td></tr>
-          <tr><td class="k">走路速度</td><td class="num">3 m/s</td><td>重铅板 ×0.67，铲着石墨 ×0.85</td></tr>
-          <tr><td class="k">班次</td><td class="num">90 s</td><td>第 80 秒哨声，最后 30 秒无线电报时</td></tr>
-          <tr><td class="k">剂量上限</td><td class="num">25 rem</td><td>超出立即结束</td></tr>
-          <tr><td class="k">评价</td><td>—</td><td>超限 / 被撤回 / 清除 ≥ 75% 算好 / 其余算差，决定汇报和第 2 天开场</td></tr>
+          <tr><td class="k">第 1 天</td><td>轻铅背心，还是重铅板</td><td>重铅板挡掉三成辐射，但人走得慢三分之一，视线晃得更厉害，自言自语也会变</td></tr>
+          <tr><td class="k">每天开工前</td><td>读数到每小时 1000 或 2000 伦琴就自动撤人，还是不撤</td><td>只在屋顶出事、而你没接通电话的时候生效</td></tr>
+          <tr><td class="k">第 2 天</td><td>普通面罩，还是铅玻璃面罩</td><td>铅玻璃护住眼睛，但视野更窄，画面更暗</td></tr>
+          <tr><td class="k">第 2 天</td><td>发剂量计，还是收走</td><td>收走后看不到剂量表，只能听盖革计数器的咔嗒声。这个选择也决定了结局</td></tr>
         </tbody>
       </table></div>
     </div>
   </section>
 
   <section>
-    <header><h2>头盔画面</h2><p>和 <code>ui/helmet/</code> 一致</p></header>
+    <header><h2>屋顶上的意外</h2><p>每天一次</p></header>
+    <div class="body">
+      <p>班次过去四成的时候，科瓦尔会在无线电里大喊读数飙升：第 1 天到每小时 1200 伦琴，第 2 天到 1600。屏幕下方出现接通提示，计时没有停。</p>
+      <ul class="plain">
+        <li><b>5 秒内接通：</b>计时暂停，由你决定把人撤回来，还是让他接着干。</li>
+        <li><b>没接通：</b>按开工前定下的规矩办，读数够了就撤，不够就继续。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <header><h2>头盔里看到的</h2><p>画面上的东西都有用</p></header>
     <div class="body wide">
       <div class="grid2">
-        <div><h3>四角读数</h3><p>左上区域和编号，右上计时和哨声时间，左下清除数和铁锹状态，右下 DP-5 风格对数剂量表、剂量率和累计剂量。</p></div>
-        <div><h3>面罩</h3><p>边框遮住视野四周。铅玻璃面罩开口更小、画面更暗。</p></div>
-        <div><h3>起雾</h3><p>面罩下沿随呼吸起雾，班次越往后越重。</p></div>
-        <div><h3>胶片白点</h3><p>密度跟随剂量率，来自当年影像上辐射打在胶片上的白点。</p></div>
-        <div><h3>自言自语</h3><p>斜体字幕在画面中部，无线电字幕在底部，两句之间至少隔 6 秒。</p></div>
-        <div><h3>1986 年录像感</h3><p>偏棕的低饱和调色加扫描线，和宣传图一致。</p></div>
+        <div><h3>四个角的读数</h3><p>左上是区域和编号，右上是计时，左下是清掉了几块、铁锹上有没有石墨，右下是剂量表、剂量率和累计剂量。</p></div>
+        <div><h3>面罩</h3><p>面罩边框挡住视野四周。换上铅玻璃面罩，开口更小，画面更暗。</p></div>
+        <div><h3>起雾</h3><p>呼吸会让面罩下沿起雾，越到后面雾越重。</p></div>
+        <div><h3>胶片上的白点</h3><p>辐射越强，画面上闪的白点越多。当年在切尔诺贝利拍下的影像上就有这种白点，是辐射打在胶片上留下的。</p></div>
+        <div><h3>自言自语</h3><p>清理人员会小声嘀咕，斜体字幕出现在画面中间；科瓦尔的无线电字幕在底部。</p></div>
+        <div><h3>1986 年的录像质感</h3><p>偏棕、褪了色的画面和扫描线，像一盘翻出来的旧录像带。</p></div>
       </div>
     </div>
   </section>
 
   <section>
-    <header><h2>结局</h2><p>两件事决定</p></header>
+    <header><h2>结局</h2><p>四种</p></header>
     <div class="body">
-      <p>期限前两天的石墨有没有都清完，以及第 2 天有没有发剂量计，组合成四个结局（清完 / 没清完 × 说实话 / 隐瞒）。结局台词后接四段史实字幕。成品会再接鸣谢画面，按任意键退出（任务 B）。</p>
+      <p>两件事决定你看到哪个结局：屋顶有没有在期限前清完，第 2 天有没有把剂量计发下去。清完或没清完，说实话或瞒下来，一共四种。结局之后是几段真实的历史字幕。</p>
     </div>
   </section>
 
   <section>
-    <header><h2>配音</h2><p>IndexTTS-2.5，本地生成</p></header>
+    <header><h2>历史背景</h2><p>游戏里的设定从哪来</p></header>
     <div class="body">
       <ul class="plain">
-        <li>英文配音，中文字幕始终显示。比赛版配 113 句，三个声音：Koval、№214、№361。指挥官和 №097 不配音。</li>
-        <li>自言自语每条只用第一个版本。</li>
-        <li>参考录音放 <code>audio/tts/refs/</code>，生成脚本是 <code>audio/tts/generate_voice.py</code>。</li>
-        <li>环境已经在 <code>F:\tools\index-tts</code> 装好并测过：RTX 5080 上一句 5 秒的台词约 3 秒生成完。</li>
+        <li>1986 年 4 月 26 日，4 号机组爆炸，石墨被抛到相邻的 3 号机组屋顶和通风烟囱的平台上。</li>
+        <li>9 月，送上屋顶的遥控机器人在强辐射下接连失灵，清理改由士兵用手完成。这些士兵后来被称为“生物机器人”。</li>
+        <li>屋顶被分成“卡佳”“娜塔莎”“玛莎”三个区域。玛莎在烟囱脚下，辐射最强。网页版只到前两个。</li>
+        <li>每个人在屋顶上的时间按秒计算，通常不到两分钟。当时清理人员的剂量上限是 25 雷姆。</li>
       </ul>
+      <p class="note">游戏里的数值为了节奏做了简化，不代表真实数据。</p>
     </div>
   </section>
 
   <section>
-    <header><h2>史实底子</h2><p>机制的出处</p></header>
+    <header><h2>网页版和正式游戏的区别</h2><p>如实说明</p></header>
     <div class="body">
       <ul class="plain">
-        <li>1986 年 4 月 26 日 4 号机组爆炸，石墨被抛到相邻的 3 号机组屋顶和通风烟囱平台上。</li>
-        <li>9 月，遥控机器人在强辐射下失灵，清理改由士兵手工完成。</li>
-        <li>屋顶分为 K「卡佳」、N「娜塔莎」、M「玛莎」三个区域，玛莎在烟囱脚下，辐射最强。比赛版只玩前两个。</li>
-        <li>每人在屋顶上的时间按秒计算，通常不到两分钟；当时清理人员的累计剂量上限是 25 rem。</li>
-      </ul>
-      <p class="note">数值都是为了节奏做的简化，不代表真实数据。</p>
-    </div>
-  </section>
-
-  <section>
-    <header><h2>效果图和游戏的差别</h2><p>如实列出</p></header>
-    <div class="body">
-      <ul class="plain">
-        <li>屋顶是几何体灰盒，不是游戏里的贴图和模型；楼梯间也简化了。</li>
-        <li>没有配音。台词按游戏的规则显示（每句 1 秒加每词 0.33 秒）。</li>
-        <li>结局后没有鸣谢画面，直接显示“演示结束”。</li>
-        <li>手机上也能玩：点“开始”后画面全屏，左下的 W A S D 键按住走动，拖动画面转头，右下圆形按钮铲起和扔下，屋顶上的无线电改成点按接通。游戏本体是 Windows 版，只用键盘和鼠标。</li>
-        <li>台词是生成页面时从工作区的剧本拷进来的，已经是缩短后的第 1 天开场。剧本再改动后，在项目根目录运行 <code>node tools/build_mockup.js</code>，再重新发布这个页面就能同步。</li>
+        <li>屋顶用简单的几何体搭成，正式游戏里是完整的模型和贴图。</li>
+        <li>网页版没有配音。正式游戏里科瓦尔和两位清理人员都有英文配音，中文字幕一直显示。</li>
+        <li>正式游戏结局后有鸣谢画面，网页版直接显示“演示结束”。</li>
+        <li>正式游戏是 Windows 版，用键盘和鼠标操作；手机上的按键只有网页版才有。</li>
       </ul>
     </div>
   </section>
 
-  <footer>90 Seconds on the Roof · 屋顶九十秒 · 效果图与玩法说明 v0.4 · 2026 年 10 月 31 日</footer>
+  <footer>90 Seconds on the Roof · 屋顶九十秒 · 网页玩法模拟 · 2026</footer>
 </main>
 
 <script id="game-data" type="application/json">{"commit":"f45edb7","characters":[{"id":"commander","name":"Commander","voiced":true},{"id":"koval","name":"Sergeant Koval","voiced":true},{"id":"liq_214","name":"Liquidator Two-One-Four","voiced":true},{"id":"liq_361","name":"Liquidator Three-Six-One","voiced":true},{"id":"liq_097","name":"Liquidator Zero-Nine-Seven","voiced":true},{"id":"lebedev","name":"Deputy Lebedev","voiced":false},{"id":"orlova","name":"Dosimetrist Orlova","voiced":false}],"days":{"1":{"day":1,"zone":"K","liquidator":"liq_214","quota":6,"hq":[{"type":"line","id":"d1_hq_004","speaker":"koval","text":"Ninety seconds per man, Comrade Colonel. Any longer and a soldier passes the twenty-five rem limit in a single run.","zh":"每人九十秒，上校同志。再长的话，士兵跑一趟就会超过二十五雷姆的上限。","next":"d1_hq_005"},{"type":"line","id":"d1_hq_005","speaker":"koval","text":"First man up is Private Two-One-Four. Nineteen years old, conscript. Target is six graphite blocks in Zone Katya.","zh":"第一个上去的是列兵二一四。十九岁，义务兵。目标是“卡佳”区域的六块石墨。","next":"d1_hq_006"},{"type":"line","id":"d1_hq_006","speaker":"koval","text":"We cut lead sheets in the workshop. Thick aprons stop more gamma rays, but they weigh thirty kilos. A boy that size will barely move.","zh":"我们在车间裁了铅板。厚铅围裙能挡住更多伽马射线，但重达三十公斤。那么瘦小的孩子穿上几乎走不动路。","next":"d1_choice_armor"},{"type":"choice","id":"d1_choice_armor","decision":"armor","options":[{"key":"1","label":"Issue light lead vests. He needs to move fast.","line":{"id":"d1_hq_008a","speaker":"commander","text":"Put him in the light vest. Ninety seconds is nothing if he cannot lift his feet.","zh":"给他穿轻型铅背心。如果迈不开腿，九十秒根本不够用。"},"effects":{"heavy_lead":false},"next":"d1_hq_011"},{"key":"2","label":"Issue heavy lead plates. Protect his chest and spine.","line":{"id":"d1_hq_008b","speaker":"commander","text":"Strap on the heavy plates. I will not send a nineteen-year-old onto that roof bare.","zh":"绑上重型铅板。我不会让一个十九岁的孩子毫无防护地上那个屋顶。"},"effects":{"heavy_lead":true},"next":"d1_hq_011"}]},{"type":"line","id":"d1_hq_011","speaker":"koval","text":"Zone Katya reads five hundred roentgen an hour. If the meter spikes and the radio drops, when do I blow the recall whistle?","zh":"“卡佳”区域本底每小时五百伦琴。如果辐射表飙升、无线电又断了，我什么时候吹哨撤人？","next":"d1_choice_standing"},{"type":"choice","id":"d1_choice_standing","decision":"standing_order","options":[{"key":"1","label":"Recall automatically at one thousand roentgen per hour.","line":{"id":"d1_hq_013a","speaker":"commander","text":"Pull him out at one thousand roentgen per hour if the line goes dead. Do not wait for me.","zh":"如果通讯中断，每小时一千伦琴就拉他回来。不用等我命令。"},"effects":{"recall_threshold_rph":1000},"next":"d1_hq_014"},{"key":"2","label":"Recall automatically at two thousand roentgen per hour.","line":{"id":"d1_hq_013b","speaker":"commander","text":"Hold until two thousand roentgen per hour. Below that, he stays on the shovel until the timer runs out.","zh":"撑到每小时两千伦琴。低于这个数，让他一直铲到计时结束。"},"effects":{"recall_threshold_rph":2000},"next":"d1_hq_014"},{"key":"3","label":"Never recall automatically. Hold until the whistle.","line":{"id":"d1_hq_013c","speaker":"commander","text":"No automatic recall. Unless I give the word myself, he works the full ninety seconds.","zh":"不设自动撤离。除非我亲自下令，否则他必须干满九十秒。"},"effects":{"recall_threshold_rph":0},"next":"d1_hq_014"}]},{"type":"line","id":"d1_hq_014","speaker":"koval","text":"Copy that, Comrade Colonel. Two-One-Four is ready at the door. Switching to radio.","zh":"收到，上校同志。二一四已经在门口准备好了。切到无线电。","next":null}],"briefing":[{"id":"d1_brief_001","speaker":"koval","text":"Check your respirator seal, Two-One-Four. When this door opens, run straight to the yellow line in Zone Katya.","zh":"检查呼吸器密封，二一四。门一开，直接跑到“卡佳”区域的黄线处。"},{"id":"d1_brief_002a","speaker":"koval","text":"That heavy lead apron will pull your shoulders down. Bend your knees when you shovel, do not fight the weight.","zh":"那件重铅围裙会把你肩膀往下压。铲的时候屈膝，别跟重量硬顶。","condition":{"heavy_lead":true}},{"id":"d1_brief_002b","speaker":"koval","text":"You have the light vest, so your legs are free. Move fast and do not stand over the black blocks.","zh":"你穿的是轻型背心，腿脚利索。动作要快，别站在黑石块正上方。","condition":{"heavy_lead":false}},{"id":"d1_brief_003","speaker":"koval","text":"Six blocks over the railing, ninety seconds. When the whistle blows, drop the shovel and run back here. Go!","zh":"六块扔过栏杆，九十秒。哨声一响，扔掉铁锹跑回来。上！"}],"radio_event":{"spike_rph":1200,"prompt":[{"id":"d1_radio_001","speaker":"koval","text":"Colonel, he kicked loose a hot fuel piece! Meter spiked!","zh":"上校，他踢松了一块高辐射燃料碎片！读数飙升！"},{"id":"d1_radio_002","speaker":"koval","text":"Over twelve hundred roentgen! Pull him or keep shovelling?","zh":"超过一千二百伦琴了！撤回来还是继续铲？"}],"pull":[{"id":"d1_radio_pull_01","speaker":"commander","text":"Blow the whistle now! Bring Two-One-Four back inside!","zh":"立刻吹哨！把二一四带回室内！"},{"id":"d1_radio_pull_02","speaker":"koval","text":"Copy! Two-One-Four, drop the shovel! Back to the door!","zh":"收到！二一四，扔掉铁锹！退回门口！"}],"continue":[{"id":"d1_radio_cont_01","speaker":"commander","text":"Keep him up there. Step back and finish.","zh":"让他留在上面。退后一步，干完。"},{"id":"d1_radio_cont_02","speaker":"koval","text":"Copy. Two-One-Four, step away from that spot, keep working!","zh":"收到。二一四，离开那块地方，继续干！"}],"timeout":[{"id":"d1_radio_time_01","speaker":"koval","text":"No answer from HQ! Standing order, he is coming down!","zh":"指挥部没回应！按常备命令，撤他下来！","condition":{"recall_threshold_rph":1000}},{"id":"d1_radio_time_02","speaker":"koval","text":"Static on the line! Below threshold, Two-One-Four, keep shovelling!","zh":"线路全是杂音！未达阈值，二一四，继续铲！","condition":{"recall_threshold_rph":2000}},{"id":"d1_radio_time_03","speaker":"koval","text":"HQ is silent! Standing order holds, stay on the shovel!","zh":"指挥部没声了！维持常备命令，继续铲！","condition":{"recall_threshold_rph":0}}]},"debrief":{"good":[{"id":"d1_debrief_good_01","speaker":"koval","text":"Two-One-Four is down in the washroom stripping his gear. Hands shaking, boots dusty, but he cleared the quota in Zone Katya.","zh":"二一四已经在盥洗室脱装备了。手在抖，靴子全是灰，但他完成了“卡佳”区域的定额。"},{"id":"d1_debrief_good_02","speaker":"orlova","voiced":false,"text":"Recorded dose: {dose} rem. Below the twenty-five rem limit. He is cleared for reassignment away from the reactor.","zh":"记录剂量：{dose} 雷姆。低于二十五雷姆上限。他获准调离反应堆区域。"}],"poor":[{"id":"d1_debrief_poor_01","speaker":"koval","text":"The boy froze up out there, Comrade Colonel. Stared right into the breach. Most of the graphite in Zone Katya is still sitting there.","zh":"那孩子在上面吓傻了，上校同志。直勾勾地盯着破口看。“卡佳”区域的大部分石墨还留在原地。"},{"id":"d1_debrief_poor_02","speaker":"lebedev","voiced":false,"text":"An unacceptable start. He used up his radiation allowance and left the roof almost untouched. Tomorrow's shift must make up the loss.","zh":"不可接受的开局。他用光了自己的辐射配额，屋顶却几乎原封未动。明天的班次必须补上缺口。"}],"overdose":[{"id":"d1_debrief_over_01","speaker":"koval","text":"Two-One-Four stayed too close to the hot fragments. When I pulled off his helmet in the stairwell, he could barely stand.","zh":"二一四离高辐射碎片太近了。我在楼梯间摘下他头盔时，他已经快站不住了。"},{"id":"d1_debrief_over_02","speaker":"orlova","voiced":false,"text":"Dosimeter reads {dose} rem. Over the twenty-five rem limit. I have sent him to the medical bus for blood counts.","zh":"剂量计读数 {dose} 雷姆。超过二十五雷姆上限。我已经把他送上医疗车做血检了。"}],"recalled":[{"id":"d1_debrief_rec_01","speaker":"koval","text":"We got Two-One-Four through the door before the spike cooked him. He is alive and under the limit, but the blocks are still on the roof.","zh":"我们在辐射峰值伤到他之前把二一四拉进了门。人没事，也没超标，但石块还在屋顶上。"},{"id":"d1_debrief_rec_02","speaker":"lebedev","voiced":false,"text":"You saved one private's chart and delayed the entire schedule, Colonel. The graphite does not decay while we wait.","zh":"你保住了一个列兵的档案数据，却耽误了整个工期，上校。我们等待的时候，石墨可不会自己衰变。"}]}},"2":{"day":2,"zone":"N","liquidator":"liq_361","quota":10,"hq":[{"type":"branch","id":"d2_hq_open","on":"previous_result","cases":{"good":"d2_hq_good_01","poor":"d2_hq_poor_01","overdose":"d2_hq_over_01","recalled":"d2_hq_poor_01"}},{"type":"line","id":"d2_hq_good_01","speaker":"koval","text":"Two-One-Four already got his papers, Comrade Colonel. He is on the bus out of the zone, still clutching them.","zh":"二一四已经拿到证明了，上校同志。他坐上了离开隔离区的班车，手里还紧紧攥着那张纸。","next":"d2_hq_002"},{"type":"line","id":"d2_hq_poor_01","speaker":"koval","text":"Yesterday's boy is gone, Comrade Colonel, and half his graphite is still sitting on the roof. The men in the tents know we fell behind.","zh":"昨天的那个孩子已经走了，上校同志，但他那份石墨还有一半留在屋顶上。帐篷里的士兵都知道我们进度落后了。","next":"d2_hq_002"},{"type":"line","id":"d2_hq_over_01","speaker":"koval","text":"The medics held Two-One-Four at the clinic all night drawing blood. His red card is stamped over the limit, and the whole squad saw it.","zh":"医护兵把二一四留在诊所抽了一整晚的血。他的红卡盖了超标章，整个班的士兵都看见了。","next":"d2_hq_002"},{"type":"line","id":"d2_hq_002","speaker":"koval","text":"Next up is Three-Six-One. Reservist, thirty-eight, tractor mechanic with two kids at home. His quota is ten blocks.","zh":"下一个上去的是三六一。预备役，三十八岁，拖拉机修理工，家里有两个孩子。他的定额是十块。","next":"d2_hq_005"},{"type":"line","id":"d2_hq_005","speaker":"koval","text":"We have a few lead glass visors. They save his eyes, but it is like looking through a bottle bottom, on a roof full of cable.","zh":"车间做了几个铅玻璃面罩。能护住眼睛，但戴上就像隔着瓶底看东西，而屋顶上到处是电缆。","next":"d2_choice_visor"},{"type":"choice","id":"d2_choice_visor","decision":"visor","options":[{"key":"1","label":"Standard visor. He needs clear vision on that footing.","line":{"id":"d2_hq_006a","speaker":"commander","text":"Give him the standard shield. A blind man on a roof full of cables will never clear ten blocks.","zh":"给他普通面罩。在满是电缆的屋顶上看不清路，根本不可能清完十块。"},"effects":{"lead_visor":false},"next":"d2_hq_015"},{"key":"2","label":"Lead glass visor. Shield his eyes from the scatter.","line":{"id":"d2_hq_006b","speaker":"commander","text":"Put him in the lead glass visor. He is a mechanic with two children, he needs his eyesight after this.","zh":"给他戴铅玻璃面罩。他是个有两个孩子的修理工，以后还得靠眼睛吃饭。"},"effects":{"lead_visor":true},"next":"d2_hq_015"}]},{"type":"line","id":"d2_hq_015","speaker":"koval","text":"Comrade Colonel, the boys have seen what Natasha reads. If they watch those needles, half of them will not go up.","zh":"上校同志，弟兄们已经看到“娜塔莎”的读数了。要是一直盯着指针，一半的人都不会上去。","next":"d2_choice_dosimeter"},{"type":"choice","id":"d2_choice_dosimeter","decision":"dosimeter","options":[{"key":"1","label":"Issue the dosimeters. Tell them the real readings.","line":{"id":"d2_hq_018a","speaker":"commander","text":"Give him the meter and the real numbers. If he is going to pay for this, he gets to know the price.","zh":"把剂量计和真实读数都给他。既然要他付出代价，就该让他知道代价是多少。"},"effects":{"dosimeter_issued":true},"next":"d2_hq_019a"},{"key":"2","label":"Take the dosimeters. Keep them calm.","line":{"id":"d2_hq_018b","speaker":"commander","text":"Take the meters. He goes up with a shovel and the whistle, nothing else. I will carry the numbers.","zh":"收走剂量计。他上去只带铁锹，只听哨声，别的什么都不带。数字由我来扛。"},"effects":{"dosimeter_issued":false},"next":"d2_hq_019b"}]},{"type":"line","id":"d2_hq_019a","speaker":"koval","text":"Then he hears the truth from me at the door. Natasha reads seven hundred an hour. Your standing order for the whistle?","zh":"那就由我在门口把实话告诉他。“娜塔莎”区域本底每小时七百伦琴。今天吹哨的常备命令怎么定？","next":"d2_choice_standing"},{"type":"line","id":"d2_hq_019b","speaker":"koval","text":"Yes, Comrade Colonel. He will hear my meter clicking anyway. Natasha reads seven hundred an hour. Your standing order for the whistle?","zh":"是，上校同志。反正他也听得到我这台表的咔嗒声。“娜塔莎”区域本底每小时七百伦琴。今天吹哨的常备命令怎么定？","next":"d2_choice_standing"},{"type":"choice","id":"d2_choice_standing","decision":"standing_order","options":[{"key":"1","label":"Recall automatically at one thousand roentgen per hour.","line":{"id":"d2_hq_013a","speaker":"commander","text":"One thousand roentgen per hour. If the radio cuts out on a spike, blow the whistle at one thousand.","zh":"每小时一千伦琴。如果遇到峰值时无线电中断，到一千就吹哨。"},"effects":{"recall_threshold_rph":1000},"next":"d2_hq_014"},{"key":"2","label":"Recall automatically at two thousand roentgen per hour.","line":{"id":"d2_hq_013b","speaker":"commander","text":"Set the automatic recall at two thousand roentgen per hour. Seven hundred base leaves no room for a low threshold.","zh":"自动撤离设在每小时两千伦琴。七百的本底容不下太低的阈值。"},"effects":{"recall_threshold_rph":2000},"next":"d2_hq_014"},{"key":"3","label":"Never recall automatically. Hold until the ninety-second whistle.","line":{"id":"d2_hq_013c","speaker":"commander","text":"No automatic recall on the meter. He stays until ninety seconds or until you hear my voice.","zh":"不按辐射表自动撤离。除非听到我的声音，否则他要干满九十秒。"},"effects":{"recall_threshold_rph":0},"next":"d2_hq_014"}]},{"type":"line","id":"d2_hq_014","speaker":"koval","text":"Understood. Three-Six-One is waiting by the stairs with his shovel. Switching to radio.","zh":"明白。三六一正拿铁锹在楼梯旁等着。切到无线电。","next":null}],"briefing":[{"id":"d2_brief_002a","speaker":"koval","text":"Keep that lead glass visor down. Your view is narrow, so turn your whole head before you swing the shovel.","zh":"把铅玻璃面罩放下。视野很窄，挥铁锹前先把整个头转过去看清。","condition":{"lead_visor":true}},{"id":"d2_brief_002b","speaker":"koval","text":"You have the clear visor so you do not trip on the cables. Do not stare down into the breach.","zh":"你戴的是透明面罩，免得被电缆绊倒。千万别低头盯着破口里面看。","condition":{"lead_visor":false}},{"id":"d2_brief_004a","speaker":"koval","text":"Here is your meter. The needle will sit in the red the whole time. Look at it once, then work.","zh":"这是你的剂量计。指针会一直停在红区。看一眼就行，然后干活。","condition":{"dosimeter_issued":true}},{"id":"d2_brief_004b","speaker":"koval","text":"No meter today. Orders. Listen for my whistle, not for the clicks.","zh":"今天不发剂量计。这是命令。听我的哨声，别去听咔嗒声。","condition":{"dosimeter_issued":false}},{"id":"d2_brief_003b","speaker":"koval","text":"Ten blocks, ninety seconds. Watch your boots in the soft tar, and run on my whistle. Go!","zh":"十块，九十秒。留神脚下的软沥青，哨响就跑。上！"}],"radio_event":{"spike_rph":1600,"prompt":[{"id":"d2_radio_001","speaker":"koval","text":"Colonel, his boot stuck near a pipe! Sixteen hundred roentgen!","zh":"上校，他的靴子卡在管道旁了！一千六百伦琴！"},{"id":"d2_radio_002","speaker":"koval","text":"Stuck in the hot spot! Pull him or finish?","zh":"卡在热点里了！撤回来还是干完？"}],"pull":[{"id":"d2_radio_pull_01","speaker":"commander","text":"Blow the whistle! Get Three-Six-One off the roof now!","zh":"吹哨！立刻让三六一下屋顶！"},{"id":"d2_radio_pull_02","speaker":"koval","text":"Whistle blowing! Three-Six-One, leave the shovel, come down!","zh":"吹哨了！三六一，丢下铁锹，下来！"}],"continue":[{"id":"d2_radio_cont_01","speaker":"commander","text":"Tell him to wrench his boot free and keep working.","zh":"叫他把靴子拔出来，继续干。"},{"id":"d2_radio_cont_02","speaker":"koval","text":"Copy! Pull free of the tar, Three-Six-One, keep throwing!","zh":"收到！从沥青里拔出来，三六一，继续扔！"}],"timeout":[{"id":"d2_radio_time_01","speaker":"koval","text":"No answer! Over one thousand, blowing the whistle, come down!","zh":"没回应！超过一千了，吹哨，快下来！","condition":{"recall_threshold_rph":1000}},{"id":"d2_radio_time_02","speaker":"koval","text":"Radio dead! Under two thousand, he stays on the roof!","zh":"无线电断了！低于两千，他留在屋顶继续干！","condition":{"recall_threshold_rph":2000}},{"id":"d2_radio_time_03","speaker":"koval","text":"No reply from HQ! No recall threshold, he stays up!","zh":"指挥部没回应！无撤离阈值，他留在上面！","condition":{"recall_threshold_rph":0}}]},"debrief":{"good":[{"id":"d2_debrief_good_01","speaker":"koval","text":"Three-Six-One came down steady, Comrade Colonel. Scraped the tar off his boots and asked for a cigarette. Zone Natasha is clear.","zh":"三六一稳稳当当地下来了，上校同志。刮掉靴子上的沥青就要了根烟。“娜塔莎”区域清理完毕。"},{"id":"d2_debrief_good_02","speaker":"orlova","voiced":false,"text":"Recorded dose: {dose} rem. Within the twenty-five rem limit. His discharge certificate is signed.","zh":"记录剂量：{dose} 雷姆。在二十五雷姆上限以内。他的退役证明已经签字了。"}],"poor":[{"id":"d2_debrief_poor_01","speaker":"koval","text":"He fought the footing the whole ninety seconds, Comrade Colonel. Cursing under his breath, and half the blocks in Natasha are still up there.","zh":"那九十秒他一直在跟脚下的路面较劲，上校同志。嘴里一直在骂，而“娜塔莎”区域还有一半石块留在上面。"},{"id":"d2_debrief_poor_02","speaker":"lebedev","voiced":false,"text":"Dose recorded at {dose} rem for a half-finished sector. The October first deadline has passed, Colonel. The Commission will want to know why.","zh":"受了 {dose} 雷姆的剂量，却只干完一半。十月一日的期限已经过了，上校。委员会会要你解释原因。"}],"overdose":[{"id":"d2_debrief_over_01","speaker":"koval","text":"Three-Six-One leaned his chest against the pipe rack to pry a block loose. He knows he went over the limit, he did not even crack a joke.","zh":"三六一把胸口抵在管架上去撬一块石头。他知道自己超标了，连句玩笑话都没说。"},{"id":"d2_debrief_over_02","speaker":"orlova","voiced":false,"text":"Dosimeter reads {dose} rem. Above the twenty-five rem limit. I have logged him for medical observation before he returns to his children.","zh":"剂量计读数 {dose} 雷姆。超过二十五雷姆上限。我已经登记让他先接受医学观察，之后再回家看孩子。"}],"recalled":[{"id":"d2_debrief_rec_01","speaker":"koval","text":"Three-Six-One pulled his boot out of the tar on the whistle and made the door. He is under the limit, but Natasha is still littered with graphite.","zh":"三六一听到哨声把靴子从沥青里拔出来跑回了门口。剂量没超标，但“娜塔莎”区域还到处是石墨。"},{"id":"d2_debrief_rec_02","speaker":"lebedev","voiced":false,"text":"Recorded dose: {dose} rem. You pulled him off early, Colonel. Natasha is unfinished, and the Commission will not grant an extension.","zh":"记录剂量：{dose} 雷姆。你提前把人撤下来了，上校。“娜塔莎”没清完，委员会绝不会批准延期。"}]}}},"calls":{"1/pre_shift":{"id":"call_d1_pre_01","speaker":"koval","text":"Comrade Colonel, Koval at the stairwell. Pick up.","zh":"上校同志，科瓦尔在楼梯间呼叫。请接听。"},"1/debrief":{"id":"call_d1_deb_01","speaker":"koval","text":"Comrade Colonel, Two-One-Four is back inside. Pick up.","zh":"上校同志，二一四已经回到室内。请接听。"},"2/pre_shift":{"id":"call_d2_pre_01","speaker":"koval","text":"Comrade Colonel, Koval on the line for Zone Natasha.","zh":"上校同志，科瓦尔呼叫，汇报“娜塔莎”区域情况。"},"2/debrief":{"id":"call_d2_deb_01","speaker":"koval","text":"Comrade Colonel, Three-Six-One is off the roof. Pick up.","zh":"上校同志，三六一已经下屋顶了。请接听。"}},"roofBarks":{"liq_214":{"shift_started":{"id":"bark_214_start_01","speaker":"liq_214","text":"Okay, okay, just ninety seconds. Keep moving.","zh":"好，好，只有九十秒。继续动起来。"},"first_block_picked":{"id":"bark_214_first_01","speaker":"liq_214","text":"Heavier than it looks. Keep it off me.","zh":"比看着要沉。别让它碰到我。"},"block_thrown":{"id":"bark_214_throw_01","speaker":"liq_214","text":"Over the edge. Next one, hurry.","zh":"扔下去了。下一块，快点。"},"carrying_long":{"id":"bark_214_carry_01","speaker":"liq_214","text":"Throw it, throw it, stop holding it!","zh":"扔掉，快扔掉，别一直端着！"},"near_breach":{"id":"bark_214_breach_01","speaker":"liq_214","text":"The air is shimmering down there. Step back!","zh":"底下的空气在发颤。快退后！"},"dose_high":{"id":"bark_214_dose_01","speaker":"liq_214","text":"Hear that clicking? Too fast, way too fast!","zh":"听到那咔哒声了吗？太快了，太快了！"},"whistle_warning":{"id":"bark_214_warn_01","speaker":"liq_214","text":"Almost time. Just one more, hurry!","zh":"快到时间了。再弄一块，快！"},"shift_ended_time":{"id":"bark_214_time_01","speaker":"liq_214","text":"That is the whistle! Drop it, run!","zh":"哨响了！扔下，快跑！"},"shift_ended_recalled":{"id":"bark_214_rec_01","speaker":"liq_214","text":"Early whistle! They are pulling me back!","zh":"提前吹哨了！他们要把我撤回去！"},"shift_ended_overdose":{"id":"bark_214_over_01","speaker":"liq_214","text":"Over the limit. I stayed too long.","zh":"超标了。我待得太久了。"},"heavy_lead":{"id":"bark_214_lead_01","speaker":"liq_214","text":"This lead apron is crushing my ribs.","zh":"这件铅围裙压得我肋骨生疼。","condition":{"heavy_lead":true}}},"liq_361":{"shift_started":{"id":"bark_361_start_01","speaker":"liq_361","text":"Nice view. Worse than threshing in August.","zh":"风景不错。比八月里打谷子还难受。"},"first_block_picked":{"id":"bark_361_first_01","speaker":"liq_361","text":"Heavy little bastard. Come on, up you go.","zh":"沉甸甸的小混蛋。来吧，起来。"},"block_thrown":{"id":"bark_361_throw_01","speaker":"liq_361","text":"Back where you came from. Next one.","zh":"从哪来回哪去吧。下一块。"},"carrying_long":{"id":"bark_361_carry_01","speaker":"liq_361","text":"Do not cradle it like a baby. Throw!","zh":"别像抱孩子似的抱在怀里。快扔！"},"near_breach":{"id":"bark_361_breach_01","speaker":"liq_361","text":"Hell of a hole down there. Step back.","zh":"底下真是个鬼窟窿。退后点。"},"dose_high":{"id":"bark_361_dose_01","speaker":"liq_361","text":"Meter is singing like a locust. Move off.","zh":"辐射表叫得跟蝗虫一样。快挪开。"},"whistle_warning":{"id":"bark_361_warn_01","speaker":"liq_361","text":"Short seconds left. One last heave.","zh":"没几秒了。最后铲一下。"},"shift_ended_time":{"id":"bark_361_time_01","speaker":"liq_361","text":"There is the whistle. Shift is over.","zh":"哨响了。这班干完了。"},"shift_ended_recalled":{"id":"bark_361_rec_01","speaker":"liq_361","text":"Pulling me early? Must be a bad spike.","zh":"提前撤我？肯定遇上强峰值了。"},"shift_ended_overdose":{"id":"bark_361_over_01","speaker":"liq_361","text":"Damn. That put me past twenty-five.","zh":"该死。这下超过二十五了。"},"lead_visor":{"id":"bark_361_visor_01","speaker":"liq_361","text":"Like looking through a welded pipe.","zh":"简直像隔着焊管往外看。","condition":{"lead_visor":true}},"dosimeter_withheld":{"id":"bark_361_nodos_01","speaker":"liq_361","text":"No meter. Then I will count myself.","zh":"没发剂量计。那我自己数着吧。","condition":{"dosimeter_issued":false}}}},"radioBarks":{"shift_started":{"id":"radio_start_01","speaker":"koval","text":"Clock is running! Get to the blocks!","zh":"开始计时了！快去石块那儿！"},"thirty_seconds_left":{"id":"radio_thirty_01","speaker":"koval","text":"Thirty seconds left! Keep the shovel moving!","zh":"还剩三十秒！铁锹别停！"},"whistle_warning":{"id":"radio_whistle_01","speaker":"koval","text":"Whistle! Time is up, run for the door!","zh":"吹哨了！时间到，快往门口跑！"},"carrying_long":{"id":"radio_slow_01","speaker":"koval","text":"Do not stand there holding it! Move!","zh":"别端着它站着！快走！"},"block_thrown":{"id":"radio_good_01","speaker":"koval","text":"Good throw! Grab the next one!","zh":"扔得好！接着铲下一块！"}},"ending":{"met_truth":[{"id":"end_mt_01","speaker":"koval","text":"Comrade Colonel, I just bolted the stairwell door. Katya and Natasha are clear. Block Three can restart on schedule.","zh":"上校同志，我刚把楼梯间的门闩上。“卡佳”和“娜塔莎”都清干净了。三号机组可以按期重启。"},{"id":"end_mt_02","speaker":"commander","text":"And the men, Sergeant? How is Three-Six-One holding up down there?","zh":"士兵们呢，中士？三六一在下面情况怎么样？"},{"id":"end_mt_03","speaker":"koval","text":"He is washing the grey dust off his face at the sink. He read his own dosimeter before he handed it to Orlova.","zh":"他正在水池边洗脸上的灰尘。把剂量计交给奥尔洛娃之前，他自己看了读数。"},{"id":"end_mt_04","speaker":"commander","text":"We counted their time in seconds, and they gave us every one. Make sure their real numbers go into the medical log.","zh":"我们按秒算他们的时间，他们一秒都没少给。确保把他们的真实读数写进医疗记录。"},{"id":"end_mt_05","speaker":"koval","text":"Orlova is writing them in ink right now, Comrade Colonel. I am hanging up the phone and taking the squad down to the buses.","zh":"奥尔洛娃正用钢笔往本子上写呢，上校同志。我挂电话了，这就带全班去坐班车。"}],"met_withheld":[{"id":"end_mw_01","speaker":"koval","text":"Comrade Colonel, the stairwell door is locked. Both zones are clear of graphite before the October first deadline.","zh":"上校同志，楼梯间的门锁上了。赶在十月一日最后期限前，两个区域的石墨都清完了。"},{"id":"end_mw_02","speaker":"commander","text":"The Commission has its clean roof. How is Three-Six-One?","zh":"委员会拿到他们要的干净屋顶了。三六一怎么样？"},{"id":"end_mw_03","speaker":"koval","text":"Sitting on the bench with his boots off. He looked at the empty pocket on his chest, then looked at me, and said nothing.","zh":"脱了靴子坐在长椅上呢。他看了看胸前空着的口袋，又看了看我，什么也没说。"},{"id":"end_mw_04","speaker":"commander","text":"He finished the job in Natasha without panicking. That was the reason we kept the meters at the desk.","zh":"他在“娜塔莎”干完了活，没有慌乱。这就是我们把剂量计留在桌上的原因。"},{"id":"end_mw_05","speaker":"koval","text":"Yes, Comrade Colonel, he stayed calm. Orlova is filling in the estimated cards now, and nobody down here is looking anyone in the eye.","zh":"是的，上校同志，他很冷静。奥尔洛娃正在填估算卡，下面这儿没人敢直视别人的眼睛。"}],"missed_truth":[{"id":"end_xt_01","speaker":"koval","text":"Comrade Colonel, the shift is over, and there is still graphite lying on the roof. We missed the October first deadline.","zh":"上校同志，班次结束了，屋顶上还有石墨残留。我们没能赶上十月一日的最后期限。"},{"id":"end_xt_02","speaker":"commander","text":"Lebedev is already writing his report to the Commission. A fresh regiment will take over the stairwell tomorrow.","zh":"列别捷夫已经在给委员会写报告了。明天会有一支新部队来接管楼梯间。"},{"id":"end_xt_03","speaker":"koval","text":"Then another sergeant will stand at this door with a whistle. At least our men went up knowing the real numbers on their chests.","zh":"那就会有另一个中士拿哨子站在这扇门前了。至少我们的士兵上去时，清楚自己胸口上的真实数字。"},{"id":"end_xt_04","speaker":"commander","text":"We did not lie to them, Koval, and we did not spend them like machines. Bring your squad down.","zh":"我们没有骗他们，科瓦尔，也没有把他们当机器消耗掉。把你的班带下来吧。"},{"id":"end_xt_05","speaker":"koval","text":"Copy that, Comrade Colonel. Stacking the shovels by the wall for the next unit now.","zh":"收到，上校同志。现在把铁锹靠墙码好，留给下一支部队。"}],"missed_withheld":[{"id":"end_xw_01","speaker":"koval","text":"Comrade Colonel, I shut the stairwell door, and the roof is still not clear. We missed the October first deadline.","zh":"上校同志，我关上了楼梯间的门，屋顶还是没清干净。我们错过了十月一日的最后期限。"},{"id":"end_xw_02","speaker":"commander","text":"I see it on the tally board, Sergeant. Another detachment will have to go up into Natasha tomorrow.","zh":"我在统计板上看到了，中士。明天得派另一支分队上“娜塔莎”区域了。"},{"id":"end_xw_03","speaker":"koval","text":"Three-Six-One is asking Orlova what his dose was, Comrade Colonel. We took his meter away, and we still left graphite on that roof.","zh":"三六一正在问奥尔洛娃他受了多少剂量，上校同志。我们收走了他的剂量计，却还是把石墨留在了那个屋顶上。"},{"id":"end_xw_04","speaker":"commander","text":"Have Orlova give him the calculated reading from the stopwatch. Every decision on that roof belongs to my file, not yours.","zh":"让奥尔洛娃把根据秒表算出来的读数告诉他。关于那个屋顶的每一个决定都记在我的档案里，不由你担责。"},{"id":"end_xw_05","speaker":"koval","text":"Paper does not take the dose, Comrade Colonel. I am hanging up now and taking the men to wash.","zh":"纸张是不会替人吃剂量的，上校同志。我挂了，带弟兄们去冲洗。"}],"epilogue":[{"id":"end_epi_01","speaker":"epilogue","voiced":false,"text":"In September 1986, after remote-controlled robots failed in the radiation, Soviet soldiers and reservists cleared graphite from the roof of Chernobyl Unit 3 and its ventilation stack by hand.","zh":"1986 年 9 月，遥控机器人在强辐射下失灵后，苏联士兵和预备役人员用双手清理了切尔诺贝利 3 号机组屋顶和通风烟囱平台上的石墨。"},{"id":"end_epi_02","speaker":"epilogue","voiced":false,"text":"In improvised lead armour and respirators, they worked in zones code-named Katya, Natasha and Masha, in shifts counted in seconds.","zh":"他们穿着自制的铅护具，戴着呼吸器，在代号“卡佳”“娜塔莎”“玛莎”的区域作业，每班以秒计算。"},{"id":"end_epi_03","speaker":"epilogue","voiced":false,"text":"Film shot on the roof shows white specks where radiation struck the film as they shovelled graphite down into the ruins of Unit 4.","zh":"在屋顶拍下的胶片上，辐射打在底片上留下了白点，记录下他们把石墨铲回 4 号机组废墟的画面。"},{"id":"end_epi_04","speaker":"epilogue","voiced":false,"text":"Dedicated to the liquidators who went onto the roof.","zh":"谨以此献给走上屋顶的清理人员。"}]}}</script>
@@ -571,7 +552,7 @@ footer{color:var(--paper-dim);font-size:13px;padding-block:26px 48px}
   intro.addEventListener('click', closeIntro);
   document.addEventListener('keydown', introKey, true);
 
-  if (DATA.commit) $('commitId').textContent = DATA.commit;
+  if (DATA.commit && $('commitId')) $('commitId').textContent = DATA.commit;
   if (!DATA.days || !DATA.days[1]) { $('status').textContent = '没有剧本数据：需要先运行拷贝脚本。'; return; }
 
   // ---------- rules, mirroring command/game_state.gd ----------
@@ -863,7 +844,7 @@ footer{color:var(--paper-dim);font-size:13px;padding-block:26px 48px}
   // ---------- 3D roof ----------
   var renderer = null;
   if (window.THREE) { try { renderer = new THREE.WebGLRenderer({ canvas: $('gl'), antialias: true }); } catch (e) { renderer = null; } }
-  if (!renderer) { setStatus('这台设备无法运行 WebGL，看不到效果图。下面的玩法说明不受影响。'); $('startCard').hidden = true; return; }
+  if (!renderer) { setStatus('这台设备显示不了 3D 画面，下面的介绍可以照常看。'); $('startCard').hidden = true; return; }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   var seed = 1986;
   function rnd(){ seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
@@ -1165,7 +1146,7 @@ footer{color:var(--paper-dim);font-size:13px;padding-block:26px 48px}
     var key = (deadlineMet() ? 'met' : 'missed') + '_' + (truthTold() ? 'truth' : 'withheld');
     await playLines([].concat(DATA.ending[key] || [], DATA.ending.epilogue || []));
     await closeOverlay();
-    $('endText').textContent = '结局（' + { met_truth: '清完 · 说实话', met_withheld: '清完 · 隐瞒', missed_truth: '没清完 · 说实话', missed_withheld: '没清完 · 隐瞒' }[key] + '）和史实字幕已播完。成品会在这里接鸣谢画面，然后按任意键退出。';
+    $('endText').textContent = '你看到的是“' + { met_truth: '清完 · 说实话', met_withheld: '清完 · 瞒下来', missed_truth: '没清完 · 说实话', missed_withheld: '没清完 · 瞒下来' }[key] + '”结局，一共有四种。谢谢游玩。';
     $('endCard').hidden = false;
     setStatus('演示结束。');
   }
