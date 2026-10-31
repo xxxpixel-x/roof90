@@ -403,16 +403,25 @@ footer{color:var(--paper-dim);font-size:13px;padding-block:26px 48px}
   </section>
 
   <section id="pc">
-    <header><h2>电脑版</h2><p>游戏实机 · Windows</p></header>
+    <header><h2>电脑版</h2><p>游戏实机 · Windows / Mac</p></header>
     <div class="body">
-      <p class="lead">上面是网页玩法模拟。想玩真正的游戏，有 3D 屋顶和配音，请在 Windows 电脑上下载。</p>
+      <p class="lead">上面是网页玩法模拟。想玩真正的游戏，有 3D 屋顶和配音，请在电脑上下载。手机上不能运行，可以把这个页面发到电脑上打开。</p>
       <div class="dl-row">
-        <a class="btn" href="https://github.com/xxxpixel-x/roof90/releases/latest/download/90SecondsOnTheRoof_win64.zip">GitHub 直接下载<small>126 MB</small></a>
+        <a class="btn" href="https://github.com/xxxpixel-x/roof90/releases/latest/download/90SecondsOnTheRoof_win64.zip">Windows 版下载<small>126 MB</small></a>
+        <a class="btn" href="https://github.com/xxxpixel-x/roof90/releases/latest/download/90SecondsOnTheRoof_mac.zip">Mac 版下载<small>147 MB</small></a>
       </div>
+      <h3>Windows</h3>
       <ul class="plain">
-        <li>Windows 10 / 11，64 位。手机上不能运行，可以把这个页面发到电脑上打开。</li>
+        <li>Windows 10 / 11，64 位。</li>
         <li>解压 zip，双击 <code>90SecondsOnTheRoof.exe</code>。</li>
         <li>如果 Windows 弹出「已保护你的电脑」，点「更多信息」→「仍要运行」。</li>
+      </ul>
+      <h3>Mac</h3>
+      <ul class="plain">
+        <li>macOS 13 及以上（M 系列芯片），或 macOS 11 及以上（Intel）。</li>
+        <li>解压 zip，把「90 Seconds on the Roof」拖进「应用程序」。</li>
+        <li>第一次打开会提示无法验证开发者。macOS 15 及以上：到「系统设置 → 隐私与安全性」最下面点「仍要打开」。更早的版本：右键点应用 →「打开」。</li>
+        <li>如果提示「已损坏」，在终端运行 <code>xattr -dr com.apple.quarantine "/Applications/90 Seconds on the Roof.app"</code></li>
       </ul>
     </div>
   </section>
