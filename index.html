@@ -215,6 +215,11 @@ html.playing,html.playing body,html.intro-on,html.intro-on body{overflow:hidden;
 .bar-ctl .sp{flex:1;min-width:200px}
 .bar-ctl button{font-size:13px;padding:6px 12px}
 .bar-ctl label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.bar-ctl a.btn{font-size:13px;padding:6px 12px}
+a.btn{display:inline-block;text-decoration:none;line-height:normal}
+.btn small{font-weight:400;opacity:.75;margin-left:8px}
+.dl-row{display:flex;flex-wrap:wrap;gap:10px 12px;margin:4px 0 20px}
+.doc a:not(.btn){color:var(--amber)}
 
 /* ---------- document ---------- */
 .doc section{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px 40px;padding-block:38px;border-bottom:1px solid var(--line)}
@@ -382,6 +387,7 @@ footer{color:var(--paper-dim);font-size:13px;padding-block:26px 48px}
   <button class="btn ghost" type="button" id="playBtn" hidden>全屏游玩</button>
   <button class="btn ghost" type="button" id="day2Btn">跳到第 2 天</button>
   <button class="btn ghost" type="button" id="restartBtn">重新开始</button>
+  <a class="btn" href="#pc">下载电脑版</a>
 </div>
 
 <main class="doc wrap">
@@ -392,7 +398,22 @@ footer{color:var(--paper-dim);font-size:13px;padding-block:26px 48px}
       <p class="lead">1986 年秋天，切尔诺贝利核电站。爆炸抛出的石墨块散落在 3 号机组的屋顶上，机器人开上去就失灵，只能派士兵拿着铁锹上去，一块一块铲下来。</p>
       <p>你同时扮演两个人：在指挥部下命令的上校，和拿着铁锹爬上屋顶的清理人员。上校做的每个决定，都会在接下来的 90 秒里落到屋顶上那个人身上，也就是落到你自己身上。</p>
       <p class="en-q">You give the orders. You take the dose.</p>
-      <p class="note">上面的画面是用网页做的玩法模拟，并非游戏实机画面。流程、数值、选择和台词都和游戏一致，但屋顶只用简单的几何体搭成，也没有配音。</p>
+      <p class="note">上面的画面是用网页做的玩法模拟，并非游戏实机画面。流程、数值、选择和台词都和游戏一致，但屋顶只用简单的几何体搭成，也没有配音。想玩实机，可以下载下面的<a href="#pc">电脑版</a>。</p>
+    </div>
+  </section>
+
+  <section id="pc">
+    <header><h2>电脑版</h2><p>游戏实机 · Windows</p></header>
+    <div class="body">
+      <p class="lead">上面是网页玩法模拟。想玩真正的游戏，有 3D 屋顶和配音，请在 Windows 电脑上下载。</p>
+      <div class="dl-row">
+        <a class="btn" href="https://github.com/xxxpixel-x/roof90/releases/latest/download/90SecondsOnTheRoof_win64.zip">GitHub 直接下载<small>126 MB</small></a>
+      </div>
+      <ul class="plain">
+        <li>Windows 10 / 11，64 位。手机上不能运行，可以把这个页面发到电脑上打开。</li>
+        <li>解压 zip，双击 <code>90SecondsOnTheRoof.exe</code>。</li>
+        <li>如果 Windows 弹出「已保护你的电脑」，点「更多信息」→「仍要运行」。</li>
+      </ul>
     </div>
   </section>
 
